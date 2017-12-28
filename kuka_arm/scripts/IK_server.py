@@ -57,8 +57,10 @@ def handle_calculate_IK(req):
             WC = EExyz - (dhp.DH[dhp.d7]*ROT_EE[:, 2])
 
             solver = Solver(dhp=dhp, ROT_EE=ROT_EE, WC=WC, EE=EExyz)
-            (theta1, theta2, theta3, theta4, theta5, theta6) = solver.solve_IK()
+            solution_set = solver.solve_IK()
 
+            (theta1, theta2, theta3, theta4, theta5,
+             theta6) = solution_set[0]
             # Populate response for the IK request
             # In the next line replace theta1,theta2...,theta6 by your joint angle variables
     	    joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, theta5, theta6]

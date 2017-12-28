@@ -131,7 +131,8 @@ def test_code(test_case):
 
     from kuka_arm.scripts.kinematics import Solver
     solver = Solver(dhp=dhp, ROT_EE=ROT_EE, WC=WC, EE=EExyz)
-    (theta1, theta2, theta3, theta4, theta5, theta6) = solver.solve_IK()
+    solution_set = solver.solve_IK()
+    (theta1, theta2, theta3, theta4, theta5, theta6) = solution_set[0]
     ########################################################################################
 
     ########################################################################################
@@ -196,6 +197,6 @@ def test_code(test_case):
 
 if __name__ == "__main__":
     # Change test case number for different scenarios
-    test_case_number = 1
+    test_case_number = 3
 
     test_code(test_cases[test_case_number])
