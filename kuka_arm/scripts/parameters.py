@@ -25,6 +25,8 @@ class ParamServer(object):
                    self.alpha4: pi/2, self.a4: 0, self.d5: 0, self.q5: self.q5,
                    self.alpha5: -pi/2, self.a5: 0, self.d6: 0, self.q6: self.q6,
                    self.alpha6: 0, self.a6: 0, self.d7: 0.303, self.q7: 0}
+        self.T0_WC = None
+        self.T0_EE = None
 
     def generate_homegenous_transforms(self):
         """
@@ -50,10 +52,10 @@ class ParamServer(object):
         T6EE = utils.make_TF(alpha=self.alpha6, a=self.a6, d=self.d7,
                             theta=self.q7).subs(self.DH)
 
-        T0_WC = (T01 * T12 * T23)
-        T0_EE = (T0_WC * T34 * T45 * T56 * T6EE)
+        self.T0_WC = (T01 * T12 * T23)
+        self.T0_EE = (self.T0_WC * T34 * T45 * T56 * T6EE)
 
-        return T0_WC, T0_EE
+        return self.T0_WC, self.T0_EE
 
     def generate_EE_RotMat(self):
         """

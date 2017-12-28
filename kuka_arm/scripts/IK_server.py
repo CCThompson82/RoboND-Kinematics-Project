@@ -20,6 +20,7 @@ from sympy import *
 
 
 from parameters import ParamServer
+from kinematics import Solver
 import utils
 
 def handle_calculate_IK(req):
@@ -50,11 +51,11 @@ def handle_calculate_IK(req):
                 [req.poses[x].orientation.x, req.poses[x].orientation.y,
                     req.poses[x].orientation.z, req.poses[x].orientation.w])
 
-            ROT_EE = ROT_EE.subs({dhp.r: roll, dhp.p: pitch, dhp.y: yaw})
             EExyz = Matrix([[px], [py], [pz]])
             WC = EExyz - (dhp.DH[dhp.d7]*ROT_EE[:, 2])
 
-            
+            solver = Solver(dhp=dhp, ROT_EE=ROT_EE, WC=WC, EE=EExyz)
+            (theta1, theta2, theta3, theta4, theta5, theta6) = solver.solve_IK()
 
             # Populate response for the IK request
             # In the next line replace theta1,theta2...,theta6 by your joint angle variables

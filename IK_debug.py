@@ -21,7 +21,7 @@ test_cases = {1:[[[2.16135,-1.42635,1.55109],
               3:[[[-1.3863,0.02074,0.90986],
                   [0.01735,-0.2179,0.9025,0.371016]],
                   [-1.1669,-0.17989,0.85137],
-                  [-2.99,-0.12,0.94,4.06,1.29,-4.12]],
+                  [-2.99,-0.12,0.94,4.06%pi,1.29,-4.12%pi]],
               4:[],
               5:[]}
 
@@ -106,28 +106,32 @@ def test_code(test_case):
     EExyz = Matrix([[px], [py], [pz]])
     WC = EExyz - (dhp.DH[dhp.d7]*ROT_EE[:, 2])
     #######################################################################
-    theta1 = atan2(WC[1], WC[0]) #NOTE: can also be plus pi, but requires changes to logic below such that theta2 calc uses theta1
+    # theta1 = atan2(WC[1], WC[0]) #NOTE: can also be plus pi, but requires changes to logic below such that theta2 calc uses theta1
+    #
+    # A = dhp.DH[dhp.d4]
+    # C = dhp.DH[dhp.a2]
+    #
+    # By = WC[2] - dhp.DH[dhp.d1]
+    # Bx = sqrt(WC[0]**2 + WC[1]**2) - dhp.DH[dhp.a1]
+    # B = sqrt((Bx)**2 + (By)**2)
+    #
+    # a = acos((B**2 + C**2 - A**2) / (2*B*C))
+    # b = acos((A**2 + C**2 - B**2) / (2*A*C))
+    # c = acos((A**2 + B**2 - C**2) / (2*A*B))
+    #
+    # theta2 = (pi/2) - a - atan2(By, Bx)
+    # theta3 = pi/2 - (b + 0.036)
+    #
+    # R0_3 = T0_3[:3, :3].evalf(subs={dhp.q1: theta1, dhp.q2: theta2, dhp.q3: theta3})
+    # R3_6 = R0_3.inv("LU") * ROT_EE
+    #
+    # theta4 = atan2(R3_6[2, 2], -R3_6[0, 2])
+    # theta5 = atan2(sqrt((R3_6[0, 2])**2 + (R3_6[2, 2])**2), R3_6[1, 2]) #NOTE: watch out for +/-
+    # theta6 = atan2(-R3_6[1, 1], R3_6[1, 0])
 
-    A = dhp.DH[dhp.d4]
-    C = dhp.DH[dhp.a2]
-
-    By = WC[2] - dhp.DH[dhp.d1]
-    Bx = sqrt(WC[0]**2 + WC[1]**2) - dhp.DH[dhp.a1]
-    B = sqrt((Bx)**2 + (By)**2)
-
-    a = acos((B**2 + C**2 - A**2) / (2*B*C))
-    b = acos((A**2 + C**2 - B**2) / (2*A*C))
-    c = acos((A**2 + B**2 - C**2) / (2*A*B))
-
-    theta2 = (pi/2) - a - atan2(By, Bx)
-    theta3 = pi/2 - (b + 0.036)
-
-    R0_3 = T0_3[:3, :3].evalf(subs={dhp.q1: theta1, dhp.q2: theta2, dhp.q3: theta3})
-    R3_6 = R0_3.inv("LU") * ROT_EE
-
-    theta4 = atan2(R3_6[2, 2], -R3_6[0, 2])
-    theta5 = atan2(sqrt((R3_6[0, 2])**2 + (R3_6[2, 2])**2), R3_6[1, 2]) #NOTE: watch out for +/-
-    theta6 = atan2(-R3_6[1, 1], R3_6[1, 0])
+    from kuka_arm.scripts.kinematics import Solver
+    solver = Solver(dhp=dhp, ROT_EE=ROT_EE, WC=WC, EE=EExyz)
+    (theta1, theta2, theta3, theta4, theta5, theta6) = solver.solve_IK()
     ########################################################################################
 
     ########################################################################################
@@ -192,6 +196,6 @@ def test_code(test_case):
 
 if __name__ == "__main__":
     # Change test case number for different scenarios
-    test_case_number = 1
+    test_case_number = 3
 
     test_code(test_cases[test_case_number])
