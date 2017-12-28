@@ -89,27 +89,23 @@ def test_code(test_case):
     # T0_EE = (T0_3 * T34 * T45 * T56 * T6EE)
 
     from kuka_arm.scripts.parameters import ParamServer
-    paramsrv = ParamServer()
-    T0_WC, T0_EE = paramsrv.generate_homegenous_transforms()
-    print(T0_WC)
+    dhp = ParamServer()
+    T0_WC, T0_EE = dhp.generate_homegenous_transforms()
     T0_3 = T0_WC
 
-    px, py, pz = req.poses[0].position.x, req.poses[0].position.y, req.poses[0].position.z
-    (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(
+    px, py, pz = (req.poses[0].position.x, req.poses[0].position.y,
+                  req.poses[0].position.z)
+    roll, pitch, yaw = tf.transformations.euler_from_quaternion(
         [req.poses[0].orientation.x, req.poses[0].orientation.y,
-            req.poses[0].orientation.z, req.poses[0].orientation.w])
+         req.poses[0].orientation.z, req.poses[0].orientation.w])
 
     r, p, y = symbols('r p y')
 
-    rot_x = Matrix([[1, 0, 0],
-                    [0, cos(r), -sin(r)],
-                    [0, sin(r), cos(r)]])
-    rot_y = Matrix([[cos(p), 0, sin(p)],
-                    [0, 1, 0],
-                    [-sin(p), 0, cos(p)]])
-    rot_z = Matrix([[cos(y), -sin(y), 0],
-                    [sin(y), cos(y), 0],
-                    [0, 0, 1]])
+    from kuka_arm.scripts import utils
+    rot_x = utils.rotate_x(r)
+    rot_y = utils.rotate_y(p)
+    rot_z = utils.rotate_z(y)
+
     rot_EE = rot_z * rot_y * rot_x
     r_correction = (rot_z * rot_y).subs({y:pi, p:-pi/2})
 
@@ -117,15 +113,15 @@ def test_code(test_case):
     ROT_EE = ROT_EE.subs({r: roll, p: pitch, y: yaw})
 
     EExyz = Matrix([[px], [py], [pz]])
-    WC = EExyz - (DH[d7]*ROT_EE[:, 2])
+    WC = EExyz - (dhp.DH[dhp.d7]*ROT_EE[:, 2])
     #######################################################################
     theta1 = atan2(WC[1], WC[0]) #NOTE: can also be plus pi, but requires changes to logic below such that theta2 calc uses theta1
 
-    A = DH[d4]
-    C = DH[a2]
+    A = dhp.DH[dhp.d4]
+    C = dhp.DH[dhp.a2]
 
-    By = WC[2] - DH[d1]
-    Bx = sqrt(WC[0]**2 + WC[1]**2) - DH[a1]
+    By = WC[2] - dhp.DH[dhp.d1]
+    Bx = sqrt(WC[0]**2 + WC[1]**2) - dhp.DH[dhp.a1]
     B = sqrt((Bx)**2 + (By)**2)
 
     a = acos((B**2 + C**2 - A**2) / (2*B*C))
@@ -135,7 +131,7 @@ def test_code(test_case):
     theta2 = (pi/2) - a - atan2(By, Bx)
     theta3 = pi/2 - (b + 0.036)
 
-    R0_3 = T0_3[:3, :3].evalf(subs={q1: theta1, q2: theta2, q3: theta3})
+    R0_3 = T0_3[:3, :3].evalf(subs={dhp.q1: theta1, dhp.q2: theta2, dhp.q3: theta3})
     R3_6 = R0_3.inv("LU") * ROT_EE
 
     theta4 = atan2(R3_6[2, 2], -R3_6[0, 2])
@@ -146,9 +142,8 @@ def test_code(test_case):
     ########################################################################################
     ## For additional debugging add your forward kinematics here. Use your previously calculated thetas
     ## as the input and output the position of your end effector as your_ee = [x,y,z]
-    FK_T = T0_EE.evalf(subs={q1: theta1, q2: theta2, q3: theta3, q4: theta4,
-                              q5: theta5, q6: theta6})
-    print(FK_T)
+    FK_T = T0_EE.evalf(subs={dhp.q1: theta1, dhp.q2: theta2, dhp.q3: theta3,
+                             dhp.q4: theta4, dhp.q5: theta5, dhp.q6: theta6})
 
     ## End your code input for forward kinematics here!
     ########################################################################################
@@ -206,6 +201,6 @@ def test_code(test_case):
 
 if __name__ == "__main__":
     # Change test case number for different scenarios
-    test_case_number = 3
+    test_case_number = 1
 
     test_code(test_cases[test_case_number])
