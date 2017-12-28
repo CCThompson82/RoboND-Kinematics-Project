@@ -61,32 +61,38 @@ def test_code(test_case):
 
     ########################################################################################
     ##
-    import numpy as np
-    import kuka_arm.scripts.utils as utils
-    ## define DH parameters
-    d1, d2, d3, d4, d5, d6, d7 = symbols('d1:8')
-    a0, a1, a2, a3, a4, a5, a6 = symbols('a0:7')
-    alpha0, alpha1, alpha2, alpha3, alpha4, alpha5, alpha6 = symbols('alpha0:7')
-    q1, q2, q3, q4, q5, q6, q7 = symbols('q1:8')
+    # import numpy as np
+    # import kuka_arm.scripts.utils as utils
+    # ## define DH parameters
+    # d1, d2, d3, d4, d5, d6, d7 = symbols('d1:8')
+    # a0, a1, a2, a3, a4, a5, a6 = symbols('a0:7')
+    # alpha0, alpha1, alpha2, alpha3, alpha4, alpha5, alpha6 = symbols('alpha0:7')
+    # q1, q2, q3, q4, q5, q6, q7 = symbols('q1:8')
+    #
+    # DH = {alpha0: 0, a0: 0, d1: 0.75, q1: q1,
+    #      alpha1: -pi/2, a1: 0.35, d2: 0, q2: q2-(pi/2),
+    #      alpha2: 0, a2: 1.25, d3: 0, q3: q3,
+    #      alpha3: -pi/2, a3: -0.054, d4: 1.501, q4: q4,
+    #      alpha4: pi/2, a4: 0, d5: 0, q5: q5,
+    #      alpha5: -pi/2, a5: 0, d6: 0, q6: q6,
+    #      alpha6: 0, a6: 0, d7: 0.303, q7: 0}
+    #
+    # T01 = utils.make_T(alpha=alpha0, a=a0, d=d1, theta=q1).subs(DH)
+    # T12 = utils.make_T(alpha=alpha1, a=a1, d=d2, theta=q2).subs(DH)
+    # T23 = utils.make_T(alpha=alpha2, a=a2, d=d3, theta=q3).subs(DH)
+    # T34 = utils.make_T(alpha=alpha3, a=a3, d=d4, theta=q4).subs(DH)
+    # T45 = utils.make_T(alpha=alpha4, a=a4, d=d5, theta=q5).subs(DH)
+    # T56 = utils.make_T(alpha=alpha5, a=a5, d=d6, theta=q6).subs(DH)
+    # T6EE = utils.make_T(alpha=alpha6, a=a6, d=d7, theta=q7).subs(DH)
+    #
+    # T0_3 = (T01 * T12 * T23)
+    # T0_EE = (T0_3 * T34 * T45 * T56 * T6EE)
 
-    DH = {alpha0: 0, a0: 0, d1: 0.75, q1: q1,
-         alpha1: -pi/2, a1: 0.35, d2: 0, q2: q2-(pi/2),
-         alpha2: 0, a2: 1.25, d3: 0, q3: q3,
-         alpha3: -pi/2, a3: -0.054, d4: 1.501, q4: q4,
-         alpha4: pi/2, a4: 0, d5: 0, q5: q5,
-         alpha5: -pi/2, a5: 0, d6: 0, q6: q6,
-         alpha6: 0, a6: 0, d7: 0.303, q7: 0}
-
-    T01 = utils.make_T(alpha=alpha0, a=a0, d=d1, theta=q1).subs(DH)
-    T12 = utils.make_T(alpha=alpha1, a=a1, d=d2, theta=q2).subs(DH)
-    T23 = utils.make_T(alpha=alpha2, a=a2, d=d3, theta=q3).subs(DH)
-    T34 = utils.make_T(alpha=alpha3, a=a3, d=d4, theta=q4).subs(DH)
-    T45 = utils.make_T(alpha=alpha4, a=a4, d=d5, theta=q5).subs(DH)
-    T56 = utils.make_T(alpha=alpha5, a=a5, d=d6, theta=q6).subs(DH)
-    T6EE = utils.make_T(alpha=alpha6, a=a6, d=d7, theta=q7).subs(DH)
-
-    T0_3 = (T01 * T12 * T23)
-    T0_EE = (T0_3 * T34 * T45 * T56 * T6EE)
+    from kuka_arm.scripts.parameters import ParamServer
+    paramsrv = ParamServer()
+    T0_WC, T0_EE = paramsrv.generate_homegenous_transforms()
+    print(T0_WC)
+    T0_3 = T0_WC
 
     px, py, pz = req.poses[0].position.x, req.poses[0].position.y, req.poses[0].position.z
     (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(
@@ -113,7 +119,7 @@ def test_code(test_case):
     EExyz = Matrix([[px], [py], [pz]])
     WC = EExyz - (DH[d7]*ROT_EE[:, 2])
     #######################################################################
-    theta1 = atan2(WC[1], WC[0]) #NOTE: can also be plus pi, but requires changes to logic below 
+    theta1 = atan2(WC[1], WC[0]) #NOTE: can also be plus pi, but requires changes to logic below such that theta2 calc uses theta1
 
     A = DH[d4]
     C = DH[a2]
