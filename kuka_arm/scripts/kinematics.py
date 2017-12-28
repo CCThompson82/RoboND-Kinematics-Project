@@ -37,10 +37,10 @@ class Solver(object):
         """
         Calculates the theta1 angle using Solver attr
         """
-        theta1 = atan2(self.WC[1], self.WC[0])
-        return theta1, theta1+pi
+        theta1 = float(atan2(self.WC[1], self.WC[0]))
+        return theta1, theta1+float(pi)
 
-    def solve_theta23(self, theta1=None):
+    def solve_theta23(self, theta1):
         """
         Calculates the theta2 angle given theta1 or class attr
         """
@@ -49,18 +49,20 @@ class Solver(object):
         C = self.dhp.DH[self.dhp.a2]
 
         By = self.WC[2] - self.dhp.DH[self.dhp.d1]
-        if theta1 is not None and theta1 > pi:
+
+        if theta1 > float(pi):
             Bx = -sqrt(self.WC[0]**2 + self.WC[1]**2) - self.dhp.DH[self.dhp.a1]
         else:
             Bx = sqrt(self.WC[0]**2 + self.WC[1]**2) - self.dhp.DH[self.dhp.a1]
+
         B = sqrt((Bx)**2 + (By)**2)
 
         angle_a = acos((B**2 + C**2 - A**2) / (2*B*C))
         angle_b = acos((A**2 + C**2 - B**2) / (2*A*C))
         angle_c = acos((A**2 + B**2 - C**2) / (2*A*B))
 
-        theta2 = (pi/2) - angle_a - atan2(By, Bx)
-        theta3 = pi/2 - (angle_b + 0.036)
+        theta2 = float((pi/2) - angle_a - atan2(By, Bx))
+        theta3 = float(pi/2 - (angle_b + 0.036))
         return theta2, theta3
 
 
@@ -81,6 +83,5 @@ class Solver(object):
         else:
             theta4 = atan2(Rwc_ee[2, 2], -Rwc_ee[0, 2])
             theta6 = atan2(-Rwc_ee[1, 1], Rwc_ee[1, 0])
-
-        print(theta4, theta5, theta6)
+        theta4, theta5, theta6 = float(theta4), float(theta5), float(theta6)
         return theta4, theta5, theta6
