@@ -58,34 +58,98 @@ def test_code(test_case):
 
     req = Pose(comb)
     start_time = time()
-    
-    ########################################################################################
-    ## 
 
-    ## Insert IK code here!
-    
-    theta1 = 0
-    theta2 = 0
-    theta3 = 0
-    theta4 = 0
-    theta5 = 0
-    theta6 = 0
-
-    ## 
     ########################################################################################
-    
+    ##
+    import numpy as np
+    import kuka_arm.scripts.utils as utils
+    ## define DH parameters
+    d1, d2, d3, d4, d5, d6, d7 = symbols('d1:8')
+    a0, a1, a2, a3, a4, a5, a6 = symbols('a0:7')
+    alpha0, alpha1, alpha2, alpha3, alpha4, alpha5, alpha6 = symbols('alpha0:7')
+    q1, q2, q3, q4, q5, q6, q7 = symbols('q1:8')
+
+    DH = {alpha0: 0, a0: 0, d1: 0.75, q1: q1,
+         alpha1: -pi/2, a1: 0.35, d2: 0, q2: q2-(pi/2),
+         alpha2: 0, a2: 1.25, d3: 0, q3: q3,
+         alpha3: -pi/2, a3: -0.054, d4: 1.501, q4: q4,
+         alpha4: pi/2, a4: 0, d5: 0, q5: q5,
+         alpha5: -pi/2, a5: 0, d6: 0, q6: q6,
+         alpha6: 0, a6: 0, d7: 0.303, q7: 0}
+
+    T01 = utils.make_T(alpha=alpha0, a=a0, d=d1, theta=q1).subs(DH)
+    T12 = utils.make_T(alpha=alpha1, a=a1, d=d2, theta=q2).subs(DH)
+    T23 = utils.make_T(alpha=alpha2, a=a2, d=d3, theta=q3).subs(DH)
+    T34 = utils.make_T(alpha=alpha3, a=a3, d=d4, theta=q4).subs(DH)
+    T45 = utils.make_T(alpha=alpha4, a=a4, d=d5, theta=q5).subs(DH)
+    T56 = utils.make_T(alpha=alpha5, a=a5, d=d6, theta=q6).subs(DH)
+    T6EE = utils.make_T(alpha=alpha6, a=a6, d=d7, theta=q7).subs(DH)
+
+    T0_3 = (T01 * T12 * T23)
+    T0_EE = (T0_3 * T34 * T45 * T56 * T6EE)
+
+    px, py, pz = req.poses[0].position.x, req.poses[0].position.y, req.poses[0].position.z
+    (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(
+        [req.poses[0].orientation.x, req.poses[0].orientation.y,
+            req.poses[0].orientation.z, req.poses[0].orientation.w])
+
+    r, p, y = symbols('r p y')
+
+    rot_x = Matrix([[1, 0, 0],
+                    [0, cos(r), -sin(r)],
+                    [0, sin(r), cos(r)]])
+    rot_y = Matrix([[cos(p), 0, sin(p)],
+                    [0, 1, 0],
+                    [-sin(p), 0, cos(p)]])
+    rot_z = Matrix([[cos(y), -sin(y), 0],
+                    [sin(y), cos(y), 0],
+                    [0, 0, 1]])
+    rot_EE = rot_z * rot_y * rot_x
+    r_correction = (rot_z * rot_y).subs({y:pi, p:-pi/2})
+
+    ROT_EE = rot_EE * r_correction
+    ROT_EE = ROT_EE.subs({r: roll, p: pitch, y: yaw})
+
+    EExyz = Matrix([[px], [py], [pz]])
+    WC = EExyz - (DH[d7]*ROT_EE[:, 2])
+    #######################################################################
+    theta1 = atan2(WC[1], WC[0]) #NOTE: can also be plus pi, but requires changes to logic below 
+
+    A = DH[d4]
+    C = DH[a2]
+
+    By = WC[2] - DH[d1]
+    Bx = sqrt(WC[0]**2 + WC[1]**2) - DH[a1]
+    B = sqrt((Bx)**2 + (By)**2)
+
+    a = acos((B**2 + C**2 - A**2) / (2*B*C))
+    b = acos((A**2 + C**2 - B**2) / (2*A*C))
+    c = acos((A**2 + B**2 - C**2) / (2*A*B))
+
+    theta2 = (pi/2) - a - atan2(By, Bx)
+    theta3 = pi/2 - (b + 0.036)
+
+    R0_3 = T0_3[:3, :3].evalf(subs={q1: theta1, q2: theta2, q3: theta3})
+    R3_6 = R0_3.inv("LU") * ROT_EE
+
+    theta4 = atan2(R3_6[2, 2], -R3_6[0, 2])
+    theta5 = atan2(sqrt((R3_6[0, 2])**2 + (R3_6[2, 2])**2), R3_6[1, 2]) #NOTE: watch out for +/-
+    theta6 = atan2(-R3_6[1, 1], R3_6[1, 0])
+    ########################################################################################
+
     ########################################################################################
     ## For additional debugging add your forward kinematics here. Use your previously calculated thetas
     ## as the input and output the position of your end effector as your_ee = [x,y,z]
-
-    ## (OPTIONAL) YOUR CODE HERE!
+    FK_T = T0_EE.evalf(subs={q1: theta1, q2: theta2, q3: theta3, q4: theta4,
+                              q5: theta5, q6: theta6})
+    print(FK_T)
 
     ## End your code input for forward kinematics here!
     ########################################################################################
 
     ## For error analysis please set the following variables of your WC location and EE location in the format of [x,y,z]
-    your_wc = [1,1,1] # <--- Load your calculated WC values in this array
-    your_ee = [1,1,1] # <--- Load your calculated end effector value from your forward kinematics
+    your_wc = [WC[0], WC[1], WC[2]] # <--- Load your calculated WC values in this array
+    your_ee = [FK_T[0, 3], FK_T[1, 3], FK_T[2, 3]] # <--- Load your calculated end effector value from your forward kinematics
     ########################################################################################
 
     ## Error analysis
@@ -136,6 +200,6 @@ def test_code(test_case):
 
 if __name__ == "__main__":
     # Change test case number for different scenarios
-    test_case_number = 1
+    test_case_number = 3
 
     test_code(test_cases[test_case_number])
