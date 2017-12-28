@@ -99,18 +99,9 @@ def test_code(test_case):
         [req.poses[0].orientation.x, req.poses[0].orientation.y,
          req.poses[0].orientation.z, req.poses[0].orientation.w])
 
-    r, p, y = symbols('r p y')
 
-    from kuka_arm.scripts import utils
-    rot_x = utils.rotate_x(r)
-    rot_y = utils.rotate_y(p)
-    rot_z = utils.rotate_z(y)
-
-    rot_EE = rot_z * rot_y * rot_x
-    r_correction = (rot_z * rot_y).subs({y:pi, p:-pi/2})
-
-    ROT_EE = rot_EE * r_correction
-    ROT_EE = ROT_EE.subs({r: roll, p: pitch, y: yaw})
+    ROT_EE = dhp.generate_EE_RotMat()
+    ROT_EE = ROT_EE.subs({dhp.r: roll, dhp.p: pitch, dhp.y: yaw})
 
     EExyz = Matrix([[px], [py], [pz]])
     WC = EExyz - (dhp.DH[dhp.d7]*ROT_EE[:, 2])

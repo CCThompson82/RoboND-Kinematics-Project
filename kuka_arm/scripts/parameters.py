@@ -14,6 +14,7 @@ class ParamServer(object):
          self.d7) = symbols('d1:8')
         (self.q1, self.q2, self.q3, self.q4, self.q5, self.q6,
          self.q7) = symbols('q1:8')
+        self.r, self.p, self.y = symbols('r p y')
 
         self.DH = {self.alpha0: 0, self.a0: 0, self.d1: 0.75, self.q1: self.q1,
                    self.alpha1: -pi/2, self.a1: 0.35, self.d2: 0,
@@ -53,3 +54,17 @@ class ParamServer(object):
         T0_EE = (T0_WC * T34 * T45 * T56 * T6EE)
 
         return T0_WC, T0_EE
+
+    def generate_EE_RotMat(self):
+        """
+
+        """
+        rot_x = utils.rotate_x(self.r)
+        rot_y = utils.rotate_y(self.p)
+        rot_z = utils.rotate_z(self.y)
+
+        rot_EE = rot_z * rot_y * rot_x
+        r_correction = (rot_z * rot_y).subs({self.y:pi, self.p:-pi/2})
+
+        ROT_EE = rot_EE * r_correction
+        return ROT_EE

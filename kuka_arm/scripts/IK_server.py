@@ -18,7 +18,9 @@ from geometry_msgs.msg import Pose
 from mpmath import *
 from sympy import *
 
-from utils import compute_fk
+
+from parameters import ParamServer
+import utils
 
 def handle_calculate_IK(req):
     rospy.loginfo("Received %s eef-poses from the plan" % len(req.poses))
@@ -26,6 +28,10 @@ def handle_calculate_IK(req):
         print "No valid poses received"
         return -1
     else:
+        # TODO: set up homegenous transforms from DH table
+        dhp = ParamServer()
+        T0_WC, T0_EE = dhp.generate_homegenous_transforms()
+        ROT_EE = dhp.generate_EE_RotMat()
 
         # Initialize service response
         joint_trajectory_list = []
@@ -44,24 +50,16 @@ def handle_calculate_IK(req):
                 [req.poses[x].orientation.x, req.poses[x].orientation.y,
                     req.poses[x].orientation.z, req.poses[x].orientation.w])
 
-            ### Your IK code here
+            ROT_EE = ROT_EE.subs({dhp.r: roll, dhp.p: pitch, dhp.y: yaw})
+            EExyz = Matrix([[px], [py], [pz]])
+            WC = EExyz - (dhp.DH[dhp.d7]*ROT_EE[:, 2])
 
+            
 
-
-
-
-	    # Compensate for rotation discrepancy between DH parameters and Gazebo
-	    #
-	    #
-	    # Calculate joint angles using Geometric IK method
-	    #
-	    #
-        ###
-
-        # Populate response for the IK request
-        # In the next line replace theta1,theta2...,theta6 by your joint angle variables
-	    joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, theta5, theta6]
-	    joint_trajectory_list.append(joint_trajectory_point)
+            # Populate response for the IK request
+            # In the next line replace theta1,theta2...,theta6 by your joint angle variables
+    	    joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, theta5, theta6]
+    	    joint_trajectory_list.append(joint_trajectory_point)
 
         rospy.loginfo("length of Joint Trajectory List: %s" % len(joint_trajectory_list))
         return CalculateIKResponse(joint_trajectory_list)
