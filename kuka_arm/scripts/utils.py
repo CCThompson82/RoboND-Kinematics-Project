@@ -1,14 +1,6 @@
 from sympy import *
 from sympy.matrices import Matrix
 
-alpha0, alpha1, alpha2, alpha3, alpha4, alpha5 = symbols('alpha1:7')
-q1, q2, q3, q4, q5, q6 = symbols('q1:7')
-a0, a1, a2, a3, a4, a5 = symbols('a1:7')
-d1, d2, d3, d4, d5, d6, dG = symbols('d1:8')
-
-r, p, y = symbols('r p y')
-
-
 def make_TF(alpha, a, d, theta):
     """
     Generates a homogenous transformation matrix given sympy variables
