@@ -20,7 +20,7 @@ class ParamServer(object):
                    self.alpha1: -pi/2, self.a1: 0.35, self.d2: 0,
                    self.q2: self.q2-(pi/2),
                    self.alpha2: 0, self.a2: 1.25, self.d3: 0, self.q3: self.q3,
-                   self.alpha3: -pi/2, self.a3: -0.054, self.d4: 1.501,
+                   self.alpha3: -pi/2, self.a3: -0.054, self.d4: 1.5,
                    self.q4: self.q4,
                    self.alpha4: pi/2, self.a4: 0, self.d5: 0, self.q5: self.q5,
                    self.alpha5: -pi/2, self.a5: 0, self.d6: 0, self.q6: self.q6,
