@@ -29,7 +29,7 @@ def handle_calculate_IK(req):
         print "No valid poses received"
         return -1
     else:
-        # TODO: set up homegenous transforms from DH table
+        # set up necessary transformation matrices using ParamServer object
         dhp = ParamServer()
         T0_WC, T0_EE = dhp.generate_homegenous_transforms()
         ROT_EE = dhp.generate_EE_RotMat()
@@ -49,22 +49,25 @@ def handle_calculate_IK(req):
 
             (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(
                 [req.poses[x].orientation.x, req.poses[x].orientation.y,
-                    req.poses[x].orientation.z, req.poses[x].orientation.w])
+                 req.poses[x].orientation.z, req.poses[x].orientation.w])
 
+            # Calculate the WC position
             ROT_EE = ROT_EE.evalf(subs={dhp.r: roll, dhp.p: pitch,
                                         dhp.y: yaw})
             EExyz = Matrix([[px], [py], [pz]])
             WC = EExyz - (dhp.DH[dhp.d7]*ROT_EE[:, 2])
 
+            # Solve IK
             solver = Solver(dhp=dhp, ROT_EE=ROT_EE, WC=WC, EE=EExyz)
             solution_set = solver.solve_IK()
 
-            (theta1, theta2, theta3, theta4, theta5,
-             theta6) = solution_set[0]
+            (theta1, theta2, theta3, theta4, theta5, theta6) = solution_set[0]
+
             # Populate response for the IK request
             # In the next line replace theta1,theta2...,theta6 by your joint angle variables
-    	    joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, theta5, theta6]
-    	    joint_trajectory_list.append(joint_trajectory_point)
+            joint_trajectory_point.positions = [
+                theta1, theta2, theta3, theta4, theta5, theta6]
+            joint_trajectory_list.append(joint_trajectory_point)
 
         rospy.loginfo("length of Joint Trajectory List: %s" % len(joint_trajectory_list))
         return CalculateIKResponse(joint_trajectory_list)
