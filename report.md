@@ -43,33 +43,32 @@ WC - Wrist Center
 
 In order to define DH parameters, joint axes must first be defined for the zero
 angle configuration of the robot.  **Figure 1** shows an illustration of the
-robot projected on the global x, z plane (with positive y heading towards the
+robot projected on the global X-Z plane (with positive y heading towards the
 viewer).
 
 ![alt text][zero]
-
-**Figure 1 - Illustration of the zero angle configuration for the KUKA210 robot.
+>Figure 1 - Illustration of the zero angle configuration for the KUKA210 robot.
 The robot is represented as a projection onto the global x, z plane,  with
-the positive y direction leaving the page toward the viewer (The  gripper
-orientation is not accurate in this schematic for clarity).   Joints are  shown
-in purple, and links between joints are shown in blue.  Each joint and link
-are numbered in accordance with DH parameter guidelines.**
+the positive y direction leaving the page toward the viewer (for clarity, the  
+gripper orientation is not represented accurately in this schematic).  Joints
+are  shown in purple, and links between joints are shown in blue.  Each joint
+and link are numbered in accordance with DH parameter guidelines.
+
 
 Origins for each joint, with their respective positive $\hat{Z}$ and $\hat{X}$
 axes must then be defined.  Choice of where to orient each joint is made with
 the objective of minimizing the number of non-zero DH parameters.  The direction
-for positive $\hat{Z}_{i}$ and $\hat{X}_{i}$ axes must be made such that
-$\hat{X}_{i-1}$ must be  perpendicular to both $\hat{Z}_{i-1}$ and $\hat{Z}_{i}$
+for positive $\hat{Z}_{i}$ and $\hat{X}_{i}$ axes must be made such that $\hat{X}_{i-1}$ must be  perpendicular to both $\hat{Z}_{i-1}$ and $\hat{Z}_{i}$
 These definitions can be observed in **Figure 2**.
 
 ![alt text][axes]
-
-**Figure 2 - Definition of positive Z and X axes for KUKA210 robot. Placement
-of axes origins were made in order to minimize the number of non-zero DH
+>**Figure 2 - Definition of positive Z and X axes for KUKA210 robot.**
+Placement of axes origins were made in order to minimize the number of non-zero DH
 parameters.  For instance, setting the origin for joints 4, 5, and 6 as
 conincident allows reduces the number of non-zero DH parameters for these joints
 down to solely their joint rotation (theta values) and twist rotation (alpha
-values).**
+values).
+
 
 #### Calculate DH parameters using the KUKA210 urdf
 
@@ -81,7 +80,7 @@ For each joint, the following parameters must be defined:
 
 ##### Joint 1
 * $\alpha_{0}$ := 0
-    * as $\hat{Z}_{0}$ and $\hat{Z}_{1}$ are coincident and therefore there is no rotation between these axes about $\hat{X}_{0}
+    * as $\hat{Z}_{0}$ and $\hat{Z}_{1}$ are coincident and therefore there is no rotation between these axes about $\hat{X}_{0}$
 * $a_{0}$ := 0
     * as $\hat{Z}_{0}$ and $\hat{Z}_{1}$ are coincident and therefore there is no separation between these axes along $\hat{X}_{0}$
 * $d_{1}$ := 0.75
@@ -92,12 +91,12 @@ For each joint, the following parameters must be defined:
 
 ![alt text][J0J1]  
 
-**Figure 3 - Demonstration of DH parameter calculation for Joint 1.  Joint 1 and
-surrounding links are shown as projections into the global X-Z, X-Y, and Y-Z
-planes.  Notice that d1 is easily depicted when projected onto the Z axis.  In
-the middle panel, in which the Z axis points directly towards the viewer,
-$\hat{X}_{0}$ and $\hat{X}_{1}$ are parallel but not conincident (represented by
-dashed marcation).**
+> **Figure 3 - Demonstration of DH parameter calculation for Joint 1.**  Joint 1
+and surrounding links are shown as projections into the global X-Z, X-Y, and Y-Z
+planes.  Notice that d1 is easily depicted with either 2D projection including
+the Z axis.  In the middle panel, in which the Z axis points directly towards
+the viewer, $\hat{X}_{0}$ and $\hat{X}_{1}$ are parallel but not conincident
+(represented here and henceforth by the dashed marcation).
 
 ##### Joint 2
 * $\alpha_{1}$ := -$\frac{\pi}{2}$
