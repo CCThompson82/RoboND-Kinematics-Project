@@ -112,10 +112,10 @@ the viewer, $\hat{X}_{0}$ and $\hat{X}_{1}$ are parallel but not conincident
 
 ![alt text][J1J2]  
 
-**Figure 4 -  Demonstration of DH parameter calculation for Joint 2.  The a1
+>**Figure 4 -  Demonstration of DH parameter calculation for Joint 2.**  The a1
 distance is easily observed when the global Z-axis is present in the projection.
 The twist angle is observable in the Y-Z projection, whereas the theta offset is
-most easily observable in the X-Z projection.**
+most easily observable in the X-Z projection.
 
 ##### Joint 3
 * $\alpha_{2}$ := 0
@@ -129,8 +129,8 @@ most easily observable in the X-Z projection.**
     * as joint 3 is a revolute joint and $\hat{X}_{2}$ and $\hat{X}_{3}$ are coincident when $\theta_{3}$ is set to zero.   
 
 ![alt text][J2J3]  
-**Figure 5 - Demonstration of DH parameter calculation for Joint 3.  The a2
-parameter is clearly shown in projections X-Z and Y-Z.**
+>**Figure 5 - Demonstration of DH parameter calculation for Joint 3.**  The a2
+parameter is clearly shown in projections X-Z and Y-Z.
 
 ##### Joint 4
 * $\alpha_{3}$ := -$\frac{\pi}{2}$
@@ -167,11 +167,11 @@ parameter is clearly shown in projections X-Z and Y-Z.**
     * as joint 5 is a revolute joint and $\hat{X}_{5}$ and $\hat{X}_{6}$ are coincident when $\theta_{6}$ is set to zero.
 
 ![alt text][J3J6]  
-**Figure 6 - Demonstration of DH parameter calculation for joints 4, 5, and 6.
+>**Figure 6 - Demonstration of DH parameter calculation for joints 4, 5, and 6.**
 The choice for frame orientations reduces the number of non-zero DH parameters.
 Notice that $\hat{X}_{4, 5, 6}$ are coincident, and that $\hat{X}_{3}$ is
 parallel to these axes (indicated by the dashed demarcation in the Y-Z
-projection)**
+projection).
 
 ##### End-Effector (EEF)
 * $\alpha_{5}$ := 0
@@ -185,10 +185,10 @@ projection)**
     * as the gripper is a fixed link upon joint 6.  
 
 ![alt text][J6JG]  
-**Figure 7 - Demonstration of DH parameter calculation for the gripper link.  
+>**Figure 7 - Demonstration of DH parameter calculation for the gripper link.**  
 The gripper link is fixed to joint 6, and thus the only parameters necessary for
 translation from J6 to the end-effector are the lengths of the J6 link length,
-as well as the gripper length.  These values sum and are set as $d_{7}$.**
+as well as the gripper length.  These values sum and are set as $d_{7}$.
 
 #### DH parameter table
 Links | alpha(i-1) | a(i-1) | d(i-1) | theta(i)
@@ -303,6 +303,34 @@ $\theta_{3} = \frac{\pi}{2} - m - b$.
 **Figure 11 - Demonstration of the $\theta_{3}$ angle.**
 
 #### Solution of $\theta_{4}$, $\theta_{5}$, and $\theta_{6}$
+The rotation matrix representing the orientation of the end effector can be defined
+as $R_{zyx}$:
+$$
+\left[
+\begin{array}
+{rrr}
+cos(p)cos(y) & sin(p)sin(r)cos(y) - sin(y)cos(r) & sin(p)cos(r)cos(y) + sin(r)sin(y) \\
+sin(y)cos(p) & sin(p)sin(r)sin(y) + cos(r)cos(y) & sin(p)sin(y)cos(r) - sin(r)cos(y) \\
+-sin(p) & sin(r)cos(p) & cos(p)cos(r)
+\end{array}
+\right]
+$$
+
+However, the urdf file describes the frame of the end-effector that is
+inconsistent with the world frame in which the rest of the robot was defined.  
+To account for this, a rotation correction is required, resulting in the
+following matrix that describes the relationship of $\theta_{4}$, $\theta_{5}$,
+and $\theta_{6}$ to the orientation of the gripper in the world frame.  
+
+$$
+\left[\begin{array}
+{rrr}
+sin(p)cos(r)cos(y) + sin(r)sin(y) & -sin(p)sin(r)cos(y) + sin(y)cos(r) & cos(p)cos(y) \\
+sin(p)sin(y)cos(r) - sin(r)cos(y) & -sin(p)sin(r)sin(y) - cos(r)cos(y) & sin(y)cos(p) \\
+cos(p)cos(r) & -sin(r)cos(p) & -sin(p)
+\end{array}\right]
+$$
+
 
 Given the $\theta$ values for joints 1-3, the total homegenous
 transformation  matrix can be utilized to solve for the angles of joints 4-6
