@@ -309,9 +309,9 @@ $$
 \left[
 \begin{array}
 {rrr}
-cos(p)cos(y) & sin(p)sin(r)cos(y) - sin(y)cos(r) & sin(p)cos(r)cos(y) + sin(r)sin(y) \\
-sin(y)cos(p) & sin(p)sin(r)sin(y) + cos(r)cos(y) & sin(p)sin(y)cos(r) - sin(r)cos(y) \\
--sin(p) & sin(r)cos(p) & cos(p)cos(r)
+cos(\theta_{5})cos(\theta_{6}) & sin(\theta_{5})sin(\theta_{4})cos(\theta_{6}) - sin(\theta_{6})cos(\theta_{4}) & sin(\theta_{5})cos(\theta_{4})cos(\theta_{6}) + sin(\theta_{4})sin(\theta_{6}) \\
+sin(\theta_{6})cos(\theta_{5}) & sin(\theta_{5})sin(\theta_{4})sin(\theta_{6}) + cos(\theta_{4})cos(\theta_{6}) & sin(\theta_{5})sin(\theta_{6})cos(\theta_{4}) - sin(\theta_{4})cos(\theta_{6}) \\
+-sin(\theta_{5}) & sin(\theta_{4})cos(\theta_{5}) & cos(\theta_{5})cos(\theta_{4})
 \end{array}
 \right]
 $$
@@ -325,11 +325,13 @@ and $\theta_{6}$ to the orientation of the gripper in the world frame.
 $$
 \left[\begin{array}
 {rrr}
-sin(p)cos(r)cos(y) + sin(r)sin(y) & -sin(p)sin(r)cos(y) + sin(y)cos(r) & cos(p)cos(y) \\
-sin(p)sin(y)cos(r) - sin(r)cos(y) & -sin(p)sin(r)sin(y) - cos(r)cos(y) & sin(y)cos(p) \\
-cos(p)cos(r) & -sin(r)cos(p) & -sin(p)
+sin(\theta_{5})cos(\theta_{4})cos(\theta_{6}) + sin(\theta_{4})sin(\theta_{6}) & -sin(\theta_{5})sin(\theta_{4})cos(\theta_{6}) + sin(\theta_{6})cos(\theta_{4}) & cos(\theta_{5})cos(\theta_{6}) \\
+sin(\theta_{5})sin(\theta_{6})cos(\theta_{4}) - sin(\theta_{4})cos(\theta_{6}) & -sin(\theta_{5})sin(\theta_{4})sin(\theta_{6}) - cos(\theta_{4})cos(\theta_{6}) & sin(\theta_{6})cos(\theta_{5}) \\
+cos(\theta_{5})cos(\theta_{4}) & -sin(\theta_{4})cos(\theta_{5}) & -sin(\theta_{5})
 \end{array}\right]
 $$
+
+
 
 
 Given the $\theta$ values for joints 1-3, the total homegenous
