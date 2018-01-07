@@ -1,4 +1,4 @@
-# Project: Kinematics Pick & Place
+ * # Project: Kinematics Pick & Place
 
 ## Summary
 The objective of this project was to develop a simple inverse kinematic solver
@@ -223,15 +223,58 @@ by the `ParamServer.generate_homegenous_transforms` method in parameters.py.
 
 ### Inverse Kinematic Solution
 
-In order to generate a closed form IK solver, it is advantageous to decouple the
-position from the WC-to-EEF orientation.  In brief, $\theta_{1}$, $\theta_{2}$,
-and $\theta_{3}$ are calculated such that the WC position, given a known WC
-orientation, would yield the target EEF position.  Having solved the first 3
-joint angles, calculation of $\theta_{4}$, $\theta_{5}$, and $\theta_{6}$ can be
-undertaken using the transformation matrices generated previously.  
+The term, inverse kinematics (IK), describes the problem of determining what robot
+state(s) (joint angles, prismatic link lengths, etc) will produce a desired
+end-effector position and orientation.  For 6-DOF robots like the KUKA210, there
+are often several IK solutions for each desired end-effector pose.  Solutions
+to IK problems can be realized using open-form (gradient or random sampling), or
+close-form methods.  
 
-#### Find the Wrist Center (WC) coordinates
-The first step to the IK solution is to work backwards from the target EEF
+In mathematical terms, the IK problem asks what set of variable parameters (i.e. $\theta_{0:6}$)
+satisfy:
+$${}_{0}^{EE}T_{symbolic} = {}_{0}^{EE}T_{target}$$
+, where:
+* ${}_{0}^{EE}T_{symbolic}$ represents the unevalulated homogenous transformation
+from base link to EE maintaining symbolic representation of $\theta_{0:6}$, and
+* ${}_{0}^{EE}T_{target}$ represents the evaluated homegenous transformation
+matrix taking into account the desired EE positions and gripper orientation.  
+
+For this project, a closed-form solution was attempted.   In order to generate a
+closed form IK solver, it is advantageous to decouple the position from the
+WC-to-EE orientation.  In other words, we stipulate that joints 1, 2 and 3 are
+utilized  solely to generate the correct EE position given a specific final EE
+orientation, which  is accomplished solely through rotations in Joints 4, 5, and 6.  
+While this  decoupling stipulation is not essential, it makes close-formed
+solution  acheivable using basic trigonometric analysis.  
+
+#### Step 1 - Define the target Transformation matrix
+The first step towards IK solution is to define ${}_{0}^{EE}T_{target}$ for the
+target pose.  
+$$ {}_{0}^{EE}T_{target} =
+\left[\begin{array}
+{rrrr}
+r11 & r12 & r13 & EE_{x} \\
+r21 & r22 & r23 & EE_{y} \\
+r31 & r32 & r33 & EE_{z} \\
+0 & 0 & 0 & 1
+\end{array}\right]
+$$
+, where:
+* $\left[\begin{array}
+{rrr}
+r11 & r12 & r13  \\
+r21 & r22 & r23  \\
+r31 & r32 & r33  
+\end{array}\right] = {}_{0}^{EE}R_{target}$
+  - i.e. the rotation matrix representing the target EE orientation in the base link (in this case, also the world) frame
+* $EE_{xyz}$ represent the positions of the EE in the frame of the base link (in this case, also the world frame)
+
+This transformation matrix is built in lines 
+
+#### Step 2 - Evaluate the coordinates of the Wrist Center (WC)
+
+
+The next step to the IK solution is to work backwards from the target EEF
 position to find the corresponding WC position given the target manipulator
 pose.
 
@@ -303,36 +346,55 @@ $\theta_{3} = \frac{\pi}{2} - m - b$.
 **Figure 11 - Demonstration of the $\theta_{3}$ angle.**
 
 #### Solution of $\theta_{4}$, $\theta_{5}$, and $\theta_{6}$
-The rotation matrix representing the orientation of the end effector can be defined
-as $R_{zyx}$:
-$$
-\left[
-\begin{array}
-{rrr}
-cos(\theta_{5})cos(\theta_{6}) & sin(\theta_{5})sin(\theta_{4})cos(\theta_{6}) - sin(\theta_{6})cos(\theta_{4}) & sin(\theta_{5})cos(\theta_{4})cos(\theta_{6}) + sin(\theta_{4})sin(\theta_{6}) \\
-sin(\theta_{6})cos(\theta_{5}) & sin(\theta_{5})sin(\theta_{4})sin(\theta_{6}) + cos(\theta_{4})cos(\theta_{6}) & sin(\theta_{5})sin(\theta_{6})cos(\theta_{4}) - sin(\theta_{4})cos(\theta_{6}) \\
--sin(\theta_{5}) & sin(\theta_{4})cos(\theta_{5}) & cos(\theta_{5})cos(\theta_{4})
-\end{array}
-\right]
-$$
+The strategy to solve for the angles of  $\theta_{4}$, $\theta_{5}$, and
+$\theta_{6}$ is as follows.  
 
-However, the urdf file describes the frame of the end-effector that is
-inconsistent with the world frame in which the rest of the robot was defined.  
-To account for this, a rotation correction is required, resulting in the
-following matrix that describes the relationship of $\theta_{4}$, $\theta_{5}$,
-and $\theta_{6}$ to the orientation of the gripper in the world frame.  
+##### Generate a rotation matrix describing the transformation from link 0 to link 3
+The homogeneous transformation between the base link to link 3 is represented by:
+$${}_{0}^{3}T = {}_{0}^{1}T \times{}  {}_{1}^{2}T \times{} {}_{2}^{3}T$$
+
+
+Because the DH parameters regarding link length, offset, and twist angle are
+constant for the KUKA210, the only variables that remain undefined for this
+transformation matrix to describe any valid given robot state are $\theta_{1}$, $\theta_{2}$,
+and $\theta_{3}$.  The rotation matrix describing the orientation of joint 3,
+given the known angles can be defined by subsetting the homegenous transformation
+matrix as follows:
+
+$${}_{0}^{3}R = {}_{0}^{3}T[0:3, 0:3]$$
+
+Finally, $\theta_{1}$, $\theta_{2}$, and $\theta_{3}$ can be substituted for the
+symbolic variables within ${}_{0}^{3}R$ to generate a useful matrix composed of
+numeric floats.  
 
 $$
 \left[\begin{array}
 {rrr}
-sin(\theta_{5})cos(\theta_{4})cos(\theta_{6}) + sin(\theta_{4})sin(\theta_{6}) & -sin(\theta_{5})sin(\theta_{4})cos(\theta_{6}) + sin(\theta_{6})cos(\theta_{4}) & cos(\theta_{5})cos(\theta_{6}) \\
-sin(\theta_{5})sin(\theta_{6})cos(\theta_{4}) - sin(\theta_{4})cos(\theta_{6}) & -sin(\theta_{5})sin(\theta_{4})sin(\theta_{6}) - cos(\theta_{4})cos(\theta_{6}) & sin(\theta_{6})cos(\theta_{5}) \\
-cos(\theta_{5})cos(\theta_{4}) & -sin(\theta_{4})cos(\theta_{5}) & -sin(\theta_{5})
+-sin(q4) * sin(q6) + cos(q4) * cos(q5) * cos(q6)& -sin(q4) * cos(q6) - sin(q6) * cos(q4) * cos(q5)& -sin(q5) * cos(q4)] \\ sin(q5) * cos(q6)& -sin(q5) * sin(q6)& cos(q5) \\ -sin(q4) * cos(q5) * cos(q6) - sin(q6) * cos(q4)& sin(q4) * sin(q6) * cos(q5) - cos(q4) * cos(q6)& sin(q4) * sin(q5)
+\end{array}\right]
+$$
+
+
+##### Describe the rotation of links 4 to the end-effector in the frame of the current links 0 to link 3
+The total homegenous transformation between the base-link to the end-effector
+is represented by:
+$${}_{0}^{EE}T = {}_{0}^{3}T \times{}  {}_{3}^{4}T \times{} {}_{4}^{5}T \times{} {}_{5}^{6}T \times{} {}_{6}^{EE}T $$
+
+Unevaluated, variables for all six joint angles are contained in the ${}_{0}^{EE}T$
+transformation matrix.  However,
+
+THE ROTATION MATRIX OF JOINT 3 to the EE
+$$
+\left[\begin{array}
+{rrr}
+-sin(q4) * sin(q6) + cos(q4) * cos(q5) * cos(q6)& -sin(q4) * cos(q6) - sin(q6) * cos(q4) * cos(q5)& -sin(q5) * cos(q4)] \\ sin(q5) * cos(q6)& -sin(q5) * sin(q6)& cos(q5) \\ -sin(q4) * cos(q5) * cos(q6) - sin(q6) * cos(q4)& sin(q4) * sin(q6) * cos(q5) - cos(q4) * cos(q6)& sin(q4) * sin(q5)
 \end{array}\right]
 $$
 
 
 
+$atan2(sqrt((Rwc_ee[0, 2])^{2} + (Rwc_ee[2, 2])^{2}), Rwc_ee[1, 2])$
+$theta4 = atan2(-Rwc_ee[2, 2], Rwc_ee[0, 2])$
 
 Given the $\theta$ values for joints 1-3, the total homegenous
 transformation  matrix can be utilized to solve for the angles of joints 4-6
@@ -373,3 +435,32 @@ solved, however sufficient performance in the pick and place task was acheived
 without even a second closed form solution.  It is likely that the addition of
 obstacles and different trajectory plans may require several possible solutions
 in order to observe the same performance.
+
+# Text Dump
+The rotation matrix representing the orientation of the end effector can be defined
+as $R_{zyx}$:
+$$
+\left[
+\begin{array}
+{rrr}
+cos(\theta_{5})cos(\theta_{6}) & sin(\theta_{5})sin(\theta_{4})cos(\theta_{6}) - sin(\theta_{6})cos(\theta_{4}) & sin(\theta_{5})cos(\theta_{4})cos(\theta_{6}) + sin(\theta_{4})sin(\theta_{6}) \\
+sin(\theta_{6})cos(\theta_{5}) & sin(\theta_{5})sin(\theta_{4})sin(\theta_{6}) + cos(\theta_{4})cos(\theta_{6}) & sin(\theta_{5})sin(\theta_{6})cos(\theta_{4}) - sin(\theta_{4})cos(\theta_{6}) \\
+-sin(\theta_{5}) & sin(\theta_{4})cos(\theta_{5}) & cos(\theta_{5})cos(\theta_{4})
+\end{array}
+\right]
+$$
+
+However, the urdf file describes the frame of the end-effector that is
+inconsistent with the world frame in which the rest of the robot was defined.  
+To account for this, a rotation correction is required, resulting in the
+following matrix that describes the relationship of $\theta_{4}$, $\theta_{5}$,
+and $\theta_{6}$ to the orientation of the gripper in the world frame.  
+
+$$
+\left[\begin{array}
+{rrr}
+sin(\theta_{5})cos(\theta_{4})cos(\theta_{6}) + sin(\theta_{4})sin(\theta_{6}) & -sin(\theta_{5})sin(\theta_{4})cos(\theta_{6}) + sin(\theta_{6})cos(\theta_{4}) & cos(\theta_{5})cos(\theta_{6}) \\
+sin(\theta_{5})sin(\theta_{6})cos(\theta_{4}) - sin(\theta_{4})cos(\theta_{6}) & -sin(\theta_{5})sin(\theta_{4})sin(\theta_{6}) - cos(\theta_{4})cos(\theta_{6}) & sin(\theta_{6})cos(\theta_{5}) \\
+cos(\theta_{5})cos(\theta_{4}) & -sin(\theta_{4})cos(\theta_{5}) & -sin(\theta_{5})
+\end{array}\right]
+$$

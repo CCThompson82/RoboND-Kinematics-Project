@@ -27,6 +27,7 @@ class ParamServer(object):
                    self.alpha6: 0, self.a6: 0, self.d7: 0.303, self.q7: 0}
         self.T0_WC = None
         self.T0_EE = None
+        self.RWC_EE = None
 
     def generate_homegenous_transforms(self):
         """
@@ -53,8 +54,11 @@ class ParamServer(object):
                             theta=self.q7).subs(self.DH)
 
         self.T0_WC = (T01 * T12 * T23)
+        self.T3_EE =  (T34 * T45 * T56 * T6EE) # NOTE: This is the matrix to examine for how to solve for theta4,5,6
+        # print(self.T3_EE[:3, :3])
         self.T0_EE = (self.T0_WC * T34 * T45 * T56 * T6EE)
-
+        self.RWC_EE = self.T0_WC[:3, :3].transpose() * self.T0_EE[:3, :3] # NOTE: this is the target RM for which we need to solve
+        # print(self.RWC_EE)
         return self.T0_WC, self.T0_EE
 
     def generate_EE_RotMat(self):
@@ -65,8 +69,9 @@ class ParamServer(object):
         rot_y = utils.rotate_y(self.p)
         rot_z = utils.rotate_z(self.y)
 
-        rot_EE = rot_z * rot_y * rot_x
+        rot_zyx = rot_z * rot_y * rot_x
         r_correction = (rot_z * rot_y).subs({self.y:pi, self.p:-pi/2})
 
-        ROT_EE = rot_EE * r_correction
+        ROT_EE = rot_zyx * r_correction
+        self.rotation_EE = ROT_EE
         return ROT_EE

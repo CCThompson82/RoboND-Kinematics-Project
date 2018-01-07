@@ -71,15 +71,26 @@ class Solver(object):
         """
         Calculates joint angles for the wrist given joint1, joint2, joint3.
         """
+        # print('Rotation of EE in frame of WC')
+        # print(self.dhp.RWC_EE.subs({self.dhp.q1: theta1, self.dhp.q2: theta2,
+        #                                   self.dhp.q3: theta3}))
+        # print('ROT_EE used')
+        # print(self.ROT_EE)
+        # obtain the rotation matrix composed from the base link to link 3 transformations
         R0_WC = self.dhp.T0_WC[:3, :3]
-
+        # evaluate the rotation matrix given the joint angle args
         R0_WC = R0_WC.evalf(subs={self.dhp.q1: theta1, self.dhp.q2: theta2,
                                   self.dhp.q3: theta3})
 
+        # what is this going on here??
         Rwc_ee = R0_WC.transpose() * self.ROT_EE
+        # self.ROT_EE is the Rzyx rotmat, transformed to match the frame of the
+        # gripper as defined in the urdf file
+        # the transpose of the rotation from base to wrist is ??
+
 
         # NOTE: Why does this logic work?  Reference the walkthrough demo and
-        # kind souls on the RoboND slack channel.  
+        # kind souls on the RoboND slack channel.
         theta5 = atan2(sqrt((Rwc_ee[0, 2])**2 + (Rwc_ee[2, 2])**2), Rwc_ee[1, 2]) #NOTE: watch out for +/- of root term
         if sin(theta5) < 0:
             theta4 = atan2(-Rwc_ee[2, 2], Rwc_ee[0, 2])
