@@ -25,6 +25,10 @@ class ParamServer(object):
                    self.alpha4: pi/2, self.a4: 0, self.d5: 0, self.q5: self.q5,
                    self.alpha5: -pi/2, self.a5: 0, self.d6: 0, self.q6: self.q6,
                    self.alpha6: 0, self.a6: 0, self.d7: 0.303, self.q7: 0}
+        self.sym_R_target = self.generate_sym_Rtarget()
+
+
+
         self.T0_WC = None
         self.T0_EE = None
         self.RWC_EE = None
@@ -61,9 +65,10 @@ class ParamServer(object):
         # print(self.RWC_EE)
         return self.T0_WC, self.T0_EE
 
-    def generate_EE_RotMat(self):
+    def generate_sym_Rtarget(self):
         """
-
+        Generates a symbolic rotation matrix that incorporates the roll, pitch,
+        yaw variables to describe the target EE orientation.
         """
         rot_x = utils.rotate_x(self.r)
         rot_y = utils.rotate_y(self.p)
@@ -72,6 +77,6 @@ class ParamServer(object):
         rot_zyx = rot_z * rot_y * rot_x
         r_correction = (rot_z * rot_y).subs({self.y:pi, self.p:-pi/2})
 
-        ROT_EE = rot_zyx * r_correction
-        self.rotation_EE = ROT_EE
-        return ROT_EE
+        sym_R_target = rot_zyx * r_correction
+
+        return sym_R_target

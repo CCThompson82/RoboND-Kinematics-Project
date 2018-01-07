@@ -219,7 +219,21 @@ The transformation for each link was built and then the sequence of
 transformations were composed into a homogeneous transform between the
 base_link and the end effector, in which only the $\theta_{i}$ values are
 required for evaluation.  The composition of these link transforms is completed
-by the `ParamServer.generate_homegenous_transforms` method in parameters.py.  
+by the `ParamServer.generate_homegenous_transforms` method in parameters.py as
+follows:
+
+$$ {}_{0}^{EE}T = {}_{0}^{1}T \times {}_{1}^{2}T \times {}_{2}^{3}T \times {}_{3}^{4}T \times {}_{4}^{5}T \times {}_{5}^{6}T \times {}_{6}^{EE}T $$
+
+Evaluation of $ {}_{0}^{EE}T $ by substituting the symbolic $\theta$ variables
+will provide a matrix that explicitly describes the end effector position and
+implicity describes the end-effector orientation (see Inverse Kinematic Solution
+section for more on calculation of euler angle orientation from a rotation
+matrix).
+
+$$ {}_{0}^{EE}T = \left[\begin{array} {rrrr} r_{11} & r_{12} & r_{13} & EE_{x} \\
+r_{21} & r_{22} & r_{23} & EE_{y} \\ r_{31} & r_{32} & r_{33} & EE_{z} \\ 0 & 0 &
+0 & 1 \end{array}\right] $$, where the $EE_{xyz}$ represent the coordinates of
+the end-effector in the frame of  the base link.  
 
 ### Inverse Kinematic Solution
 
@@ -253,52 +267,88 @@ target pose.
 $$ {}_{0}^{EE}T_{target} =
 \left[\begin{array}
 {rrrr}
-r11 & r12 & r13 & EE_{x} \\
-r21 & r22 & r23 & EE_{y} \\
-r31 & r32 & r33 & EE_{z} \\
+r_{11} & r_{12} & r_{13} & EE_{x} \\
+r_{21} & r_{22} & r_{23} & EE_{y} \\
+r_{31} & r_{32} & r_{33} & EE_{z} \\
 0 & 0 & 0 & 1
 \end{array}\right]
 $$
 , where:
 * $\left[\begin{array}
 {rrr}
-r11 & r12 & r13  \\
-r21 & r22 & r23  \\
-r31 & r32 & r33  
+r_{11} & r_{12} & r_{13}  \\
+r_{21} & r_{22} & r_{23}  \\
+r_{31} & r_{32} & r_{33}  
 \end{array}\right] = {}_{0}^{EE}R_{target}$
-  - i.e. the rotation matrix representing the target EE orientation in the base link (in this case, also the world) frame
+  - i.e. the rotation matrix representing the target EE orientation in the base link (in this case, also the world) frame, generated using the roll, pitch, and yaw rotations given as the desired EE pose.  
 * $EE_{xyz}$ represent the positions of the EE in the frame of the base link (in this case, also the world frame)
 
-This transformation matrix is built in lines 
+This symbolic transformation matrix only needs to be generated once, and is done
+so during the initiation  of the `ParamServer` object from parameters.py
+(initiation occurs on line 33 in IK_server.py).  This generation incorporates
+the given roll, pitch, and yaw angles into a $R_{zyx}$ matrix that has been
+corrected to place the urdf frame definition into the frame of the base link (
+also the world frame).  
 
 #### Step 2 - Evaluate the coordinates of the Wrist Center (WC)
 
 
-The next step to the IK solution is to work backwards from the target EEF
-position to find the corresponding WC position given the target manipulator
-pose.
+The next step to the IK solution is to work backwards from the ${}_{0}^{EE}T_{target}$
+to obtain the positions of the WC in the world frame.  This is accomplished by
+taking the z-frame of the ${}_{0}^{EE}R_{target}$, which represents the vector
+describing the translation from the WC to the EE.  Thus, the WC position can be
+determined by translating the EE position backwards along the length the
+gripper:
 
-A rotation matrix describing the relationship between roll, pitch, and yaw and
-the end effector orientation was constructed.  This rotation matrix is then
-evaluated after substitution with the target euler angles (converted from the
-target quaternion).  The z-frame of this rotation matrix is the u, v, w vector
-orientation of the WC-to-EEF, and is used to calculate the corresponding WC
-position that would generate the target EEF position, given the target
-WC-to-EEF orientation.  The code for these steps can be found in lines 54-57 in
-`IK_server.py`.
+$$ \left[\begin{array}
+{r}
+WC_{x} \\
+WC_{y} \\
+WC_{z}
+\end{array}\right] =
+\left[\begin{array}
+{r}
+EE_{x} \\
+EE_{y} \\
+EE_{z}
+\end{array}\right] - (d_{7} \times
+\left[\begin{array}
+{r}
+r_{13} \\
+r_{23} \\
+r_{33}
+\end{array}\right] )
+$$
 
-#### Solution of $\theta_{1}$
+The code for this step can be found in line 38 of kinematics.py in the
+`Solver.solve_IK` method.  
+
+#### Step 3 - Utilize the WC position to solve for $\theta_{1}$
+
 $\theta_{1}$ represents the twist in joint 1.  Thus it can be solved
-trigonometrically by projecting the WC position into its X and Y components. An
-illustration of $\theta_{1}$ is shown in **Figure 8**.  
+trigonometrically by projecting the WC position into its X and Y components,
+ignoring the Z-projection. An illustration of $\theta_{1}$ is shown in **Figure
+8**.  
 
 ![alt_text][Theta1]
-**Figure 8 - Illustration of $\theta_{1}$ in the X-Y projection (from above) of
-the robot state.  Joint 1, 2, 3, and the spherical wrist are illustrated from
+>**Figure 8 - Illustration of $\theta_{1}$ in the X-Y projection (from above) of
+the robot state**.  Joint 1, 2, 3, and the spherical wrist are illustrated from
 left to right.  The angle between $\hat{X}_{0}$ and $\hat{X}_{1}$ is the
-arctangent of the $WC_{y}$ and $WC_{x}$ components.**
+arctangent of the $WC_{y}$ and $WC_{x}$ components.
 
-#### Solution of $\theta_{2}$
+From this depiction it is clear that:
+$$ tan(\theta_{1}) = \frac{WC_{y}}{WC_{x}} $$
+, thus:
+
+$$ \theta_{1} = atan2(WC_{y}, WC_{x}) $$
+
+Notably, both this solution to $\theta_{1}$ as well as $\pi - \theta_{1}$ could
+be part of valid solutions for most 6-DOF robots (where joint 2 can accomodate
+this  extra pi rotation by flipping all the way over).  However, this is not the
+case for the KUKA210, due to the joint limit on Joint 2. Thus $\pi - \theta_{1}$
+is ignored for this solution.  
+
+#### Step 4 - Project robot state into X-Z to solve for $\theta_{2}$
 
 Depiction of the $\theta_{2}$ is shown in **Figure 9**.  Because the definition
 of $\hat{X}_{1}$ and $\hat{X}_{2}$ are orthoganol, a constant rotation of
@@ -307,43 +357,103 @@ onto the X-Z plane illustrates the rotation from this adjusted $\hat{X}_{1}$ to
 $\hat{X}_{2}$ rotation about $\hat{Z}_{1}$. The triangle generated by Joint 2,
 Joint 3, and the WC can be exploited in order to calcluate $\theta_{2}$.  Sides
 C and A are known from the robot description, whereas the length of side B can
-be determined from applying pythagorean theourem to the sides of a right
-triangle  formed by the vector between Joint 2 and the WC.  The cosine rule
-can be applied to this SSS triangle to obtain each angle for the shape.  Finally
-the $\theta_{2}$ angle can be calculated as the difference between $\frac{\pi}{2}$
-and the sum of angle a with the arctangent of the opposite and adjacent sides
-of the right triangle described by the vector between Joint 2 and the WC in the
-X-Z plane.  
+be determined from applying the pythagorean theorem to the sides of the right
+triangle that is formed by the vector between Joint 2 and the WC in the X-Z
+plane.  The cosine rule can be applied to this SSS triangle to obtain each angle
+of its angles.  
 
 ![alt_text][theta2]
-**Figure 9 - Demonstration of the calculation of $\theta_{2}$. The $\theta_{2}$
+>**Figure 9 - Demonstration of the calculation of $\theta_{2}$.** The $\theta_{2}$
 angle can be observed by projecting the robot state into the X-Z plane (left
 panel).  A simplification of the robot state is shown in the right panel to aid
 description of the method for calculating the angle.  $\theta_{2}$ is the
 difference between $\frac{\pi}{2}$ and the sum of angle a with the arctangent
-of the green right triangle.**
+of the green right triangle.
 
-#### Solution of $\theta_{3}$
+From this depiction, it is demonstrated that:
+$$ \frac{\pi}{2} = \theta_{2} + acos(\frac{(B^{2} + C^{2} - A^{2}}{(2\times B\times C)}) + atan2(WC_{z}-d_{1}, WC_{x} - a_{1})$$, where $ acos(\frac{(B^{2} + C^{2} - A^{2}}{(2\times B\times C)}) $ provides angle $a$ in the diagram, and thus:
+$$ \theta_{2} = \frac{\pi}{2} - acos(\frac{(B^{2} + C^{2} - A^{2}}{(2\times B\times C)}) - atan2(WC_{z}-d_{1}, WC_{x} - a_{1})$$
+
+The code for this calculation is found within `Solver.find_theta23` in
+kinematics.py, in lines 63-75.  
+
+#### Step 5 - Project the WC into the frame of $\hat{X}_{2}$ to solve for $\theta_{3}$
 
 Depiction of $\theta_{3}$ is less straight forward, however by displaying the
 Joint 2, Joint3, and WC in the frame of the $\hat{X}_{2}$ axis helps to reveal
 the rotation described by this value.  **Figure 10** depicts where the the WC
-would be located in this custom frame if $\theta_{3}$ were zero.  By drawing an
-orthoganol to $\hat{X}_{2}$,  we can show that $\frac{\pi}{2} = m + b$ when
-$\theta_{3} = 0$ (**Figure 10**).  The angle $m$  can be calculated using the
-arctangent of parameters $a_{3}$ and $d_{4}$.  The  angle $b$ is known from the
-analysis of the SSS triangle used to calculate  $\theta_{2}$.  
+would be located in this custom frame if $\theta_{3}$ were set to zero.  By
+drawing an orthoganol to $\hat{X}_{2}$,  we can show that: $\frac{\pi}{2} = m +
+b$, when $\theta_{3} = 0$.
+
+The angle $b$ can be calculated from application of the cosine rule to the SSS
+triangle shown in **Figure 9**.  The angle $m$ can be calculated using the
+arctangent of parameters $a_{3}$ and $d_{4}$.    
 
 ![alt_text][theta3setup]
-**Figure 10 - Logic behind calculation of $\theta_{3}$, using the WC position
-at a $\theta_{3}$ angle of 0 radians.**
+>**Figure 10 - Visualization of joint 3 to the WC in the frame of $\hat{X}_{2}$.**
+Joints 2, 3 and the WC are shown in purple, with robot links in blue. An
+orthoganol to $\hat{X}_{2}$ that lies in the global X-Z frame is shown in dashed
+red.  The vector that describes the Joint 3 to WC position is shown in dashed
+green, however due to our DH placement of the WC, this does not represent the
+link between Joint 3 to Joint 4.  The links from Joint 3 to 4 and from 4 to 5
+are shown in dashed blue.  Notably, $\frac{\pi}{2} = m +b$, when $\theta_{3} = 0$.  
 
-**Figure 11** depicts the robot state both at a Joint 3 angle of 0 radians, as
-well as a example non-zero position.  From this illustration, it is clear that
-$\theta_{3} = \frac{\pi}{2} - m - b$.  
+It is also useful to point out that $\hat{X}_{3}$ is coincident with $\hat{X}_{2}$
+in the zero angle robot configuration.  A non-zero joint 3 angle is depicted in
+**Figure 11**.  From this description, it is clear that the $\theta_{3}$ angle
+is equal to the difference between $\frac{\pi}{2}$ and the sum of angles $b$ and $m$.  
 
 ![alt_text][theta3]
-**Figure 11 - Demonstration of the $\theta_{3}$ angle.**
+>**Figure 11 - Demonstration of a non-zero $\theta_{3}$ angle.**  
+
+From this analysis it is clear that:
+$$ \frac{\pi}{2} = \theta_{3} + m + b$$, thus:
+$$ \theta_{3} = \frac{\pi}{2} - atan2(a_{3}, d_{4}) - acos(\frac{(A^{2} + C^{2} - B^{2}}{(2\times A\times C)})  $$
+
+The code for this calculation is found within `Solver.find_theta23` in
+kinematics.py, in lines 63-76.  
+
+##### Step 6 - Transform the ${}_{0}^{EE}R_{target}$ into the frame of the current WC
+To accomplish this, the following matrix multiplication is required:
+$$ {}_{WC}^{EE}R_{target} = {}_{0}^{WC}R^{-1} \times {}_{0}^{EE}R_{target}$$
+
+To obtain ${}_{0}^{WC}R^{-1}$, the homegenous transform from base link to link 3
+is evaluated using the  $\theta_{1}$, $\theta_{2}$, and $\theta_{3}$ angles
+already calculated.  This evaluated matrix is transposed and the multiplied into
+the evaluated target EE rotation matrix. The result of this multiplication is
+a matrix of float values (i.e. not symbolic) that represent the rotation from
+the zero angle wrist orientation to the target wrist orientation given the
+current orientation of joints 1, 2, and 3.  
+
+##### Step 7 - Generate the symbolic rotation matrix corresponding to ${}_{0}^{EE}R_{target}$
+Finally, values must be found for $\theta_{4}$, $\theta_{5}$, and $\theta_{6}$ that satisfy
+the following evaluation:
+$${}_{WC}^{EE}R_{sym} = {}_{WC}^{EE}R_{target}$$
+
+${}_{WC}^{EE}R_{symbolic} is defined as the rotation matrix parsed from the
+composition of individual homegenous transformations from link 3 to the end
+effector:
+
+$$ {}_{3}^{EE}T = {}_{3}^{4}T \times {}_{4}^{5}T \times {}_{5}^{6}T \times {}_{6}^{EE}T$$
+$$ {}_{3}^{EE}R_{sym} = (r_{11}:r_{33}) \subseteq {}_{3}^{EE}T$$
+
+When simplified, the WC to EE rotation matrix can be represented as:
+$${}_{WC}^{EE}R_{sym} =
+\left[\begin{array}
+{rrr}
+-sin(\theta_{4}) * sin(\theta_{6}) + cos(\theta_{4}) * cos(\theta_{5}) * cos(\theta_{6})& -sin(\theta_{4}) * cos(\theta_{6}) - sin(\theta_{6}) * cos(\theta_{4}) * cos(\theta_{5})& -sin(\theta_{5}) * cos(\theta_{4})] \\ sin(\theta_{5}) * cos(\theta_{6})& -sin(\theta_{5}) * sin(\theta_{6})& cos(\theta_{5}) \\ -sin(\theta_{4}) * cos(\theta_{5}) * cos(\theta_{6}) - sin(\theta_{6}) * cos(\theta_{4})& sin(\theta_{4}) * sin(\theta_{6}) * cos(\theta_{5}) - cos(\theta_{4}) * cos(\theta_{6})& sin(\theta_{4}) * sin(\theta_{5})
+\end{array}\right]
+$$
+
+This symbolic matrix can be exploited in order to trigonometrically solve for
+each of the $\theta_{4}$, $\theta_{5}$, and $\theta_{6}$ angles.  
+
+##### Step 8 - Solve for $\theta_{4}$, $\theta_{5}$, and $\theta_{6}$
+
+
+
+
 
 #### Solution of $\theta_{4}$, $\theta_{5}$, and $\theta_{6}$
 The strategy to solve for the angles of  $\theta_{4}$, $\theta_{5}$, and

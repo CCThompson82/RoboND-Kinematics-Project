@@ -6,7 +6,7 @@ class Solver(object):
     """
 
     """
-    def __init__(self, dhp, ROT_EE, WC, EE):
+    def __init__(self, dhp):
         """
 
         Args
@@ -17,16 +17,26 @@ class Solver(object):
             EE  (sympy.matrices.Matrix): Matrix representing the end effector
                 position ([[x], [y], [z]])
         """
-        self.WC = WC
-        self.EE = EE
         self.dhp = dhp
-        self.ROT_EE = ROT_EE
+        self.T_target = None
 
-    def solve_IK(self):
+    def solve_IK(self, EExyz, EErpy):
         """
         Calculates IK solution(s) to the target pose setup during the object
         initiation
         """
+        self.EExyz = Matrix([[EExyz[0]], [EExyz[1]], [EExyz[2]]])
+
+        self.Rtarget = self.dhp.sym_R_target.subs({self.dhp.r: EErpy[0],
+                                                   self.dhp.p: EErpy[1],
+                                                   self.dhp.y: EErpy[2]})
+
+        # NOTE: The z-frame of Rtarget describes the u,v,w vector from WC to EE.
+        # The WC position is the translation backwords along the z-frame of
+        # Rtarget for the length of the gripper
+
+        self.WC = self.EExyz - (self.dhp.DH[self.dhp.d7]*self.Rtarget[:, 2])
+
         theta1 = self.solve_theta1()
         theta2, theta3 = self.solve_theta23()
         theta4, theta5, theta6 = self.solve_theta456(
