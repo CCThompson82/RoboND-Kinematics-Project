@@ -99,12 +99,12 @@ def test_code(test_case):
         [req.poses[0].orientation.x, req.poses[0].orientation.y,
          req.poses[0].orientation.z, req.poses[0].orientation.w])
 
-
-    ROT_EE = dhp.generate_EE_RotMat()
-    ROT_EE = ROT_EE.subs({dhp.r: roll, dhp.p: pitch, dhp.y: yaw})
-
-    EExyz = Matrix([[px], [py], [pz]])
-    WC = EExyz - (dhp.DH[dhp.d7]*ROT_EE[:, 2])
+    #
+    # ROT_EE = dhp.generate_EE_RotMat()
+    # ROT_EE = ROT_EE.subs({dhp.r: roll, dhp.p: pitch, dhp.y: yaw})
+    #
+    # EExyz = Matrix([[px], [py], [pz]])
+    # WC = EExyz - (dhp.DH[dhp.d7]*ROT_EE[:, 2])
     #######################################################################
     # theta1 = atan2(WC[1], WC[0]) #NOTE: can also be plus pi, but requires changes to logic below such that theta2 calc uses theta1
     #
@@ -130,8 +130,8 @@ def test_code(test_case):
     # theta6 = atan2(-R3_6[1, 1], R3_6[1, 0])
 
     from kuka_arm.scripts.kinematics import Solver
-    solver = Solver(dhp=dhp, ROT_EE=ROT_EE, WC=WC, EE=EExyz)
-    solution_set = solver.solve_IK()
+    solver = Solver(dhp=dhp)
+    solution_set = solver.solve_IK(EExyz= [px, py, pz], EErpy=[roll, pitch, yaw])
     (theta1, theta2, theta3, theta4, theta5, theta6) = solution_set[0]
     ########################################################################################
 
@@ -145,7 +145,7 @@ def test_code(test_case):
     ########################################################################################
 
     ## For error analysis please set the following variables of your WC location and EE location in the format of [x,y,z]
-    your_wc = [WC[0], WC[1], WC[2]] # <--- Load your calculated WC values in this array
+    your_wc = [solver.WC[0], solver.WC[1], solver.WC[2]] # <--- Load your calculated WC values in this array
     your_ee = [FK_T[0, 3], FK_T[1, 3], FK_T[2, 3]] # <--- Load your calculated end effector value from your forward kinematics
     ########################################################################################
 

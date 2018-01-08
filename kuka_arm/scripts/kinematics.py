@@ -27,15 +27,15 @@ class Solver(object):
         """
         self.EExyz = Matrix([[EExyz[0]], [EExyz[1]], [EExyz[2]]])
 
-        self.Rtarget = self.dhp.sym_R_target.subs({self.dhp.r: EErpy[0],
-                                                   self.dhp.p: EErpy[1],
-                                                   self.dhp.y: EErpy[2]})
+        self.Rtarget_0EE = self.dhp.sym_R_target.subs({self.dhp.r: EErpy[0],
+                                                       self.dhp.p: EErpy[1],
+                                                       self.dhp.y: EErpy[2]})
 
         # NOTE: The z-frame of Rtarget describes the u,v,w vector from WC to EE.
         # The WC position is the translation backwords along the z-frame of
         # Rtarget for the length of the gripper
 
-        self.WC = self.EExyz - (self.dhp.DH[self.dhp.d7]*self.Rtarget[:, 2])
+        self.WC = self.EExyz - (self.dhp.DH[self.dhp.d7]*self.Rtarget_0EE[:, 2])
 
         theta1 = self.solve_theta1()
         theta2, theta3 = self.solve_theta23()
@@ -73,7 +73,9 @@ class Solver(object):
         angle_c = acos(((A)**2 + (B)**2 - (C)**2) / (2*A*B))
 
         theta2 = ((pi/2) - angle_a - atan2(Bz, Bx)).evalf()
-        theta3 = float(pi/2 - (angle_b + 0.036)) #TODO: explicit sag angle calc
+        m = atan2(self.dhp.DH[self.dhp.a3], self.dhp.DH[self.dhp.d4])
+
+        theta3 = (pi/2 - (angle_b + abs(m)))
         return theta2, theta3
 
 
@@ -81,11 +83,7 @@ class Solver(object):
         """
         Calculates joint angles for the wrist given joint1, joint2, joint3.
         """
-        # print('Rotation of EE in frame of WC')
-        # print(self.dhp.RWC_EE.subs({self.dhp.q1: theta1, self.dhp.q2: theta2,
-        #                                   self.dhp.q3: theta3}))
-        # print('ROT_EE used')
-        # print(self.ROT_EE)
+
         # obtain the rotation matrix composed from the base link to link 3 transformations
         R0_WC = self.dhp.T0_WC[:3, :3]
         # evaluate the rotation matrix given the joint angle args
@@ -93,7 +91,9 @@ class Solver(object):
                                   self.dhp.q3: theta3})
 
         # what is this going on here??
-        Rwc_ee = R0_WC.transpose() * self.ROT_EE
+
+        Rt = R0_WC.transpose() * self.Rtarget_0EE # NOTE: This is the evaluated matrix, (WC-->EE)Rtarget in the report.
+
         # self.ROT_EE is the Rzyx rotmat, transformed to match the frame of the
         # gripper as defined in the urdf file
         # the transpose of the rotation from base to wrist is ??
@@ -101,27 +101,29 @@ class Solver(object):
 
         # NOTE: Why does this logic work?  Reference the walkthrough demo and
         # kind souls on the RoboND slack channel.
-        theta5 = atan2(sqrt((Rwc_ee[0, 2])**2 + (Rwc_ee[2, 2])**2), Rwc_ee[1, 2]) #NOTE: watch out for +/- of root term
+        theta5 = atan2(sqrt((Rt[0, 2])**2 + (Rt[2, 2])**2), Rt[1, 2]) #NOTE: watch out for +/- of root term
         if sin(theta5) < 0:
-            theta4 = atan2(-Rwc_ee[2, 2], Rwc_ee[0, 2])
-            theta6 = atan2(Rwc_ee[1, 1], -Rwc_ee[1, 0])
+            theta4 = atan2(-Rt[2, 2], Rt[0, 2])
+            theta6 = atan2(Rt[1, 1], -Rt[1, 0])
         else:
-            theta4 = atan2(Rwc_ee[2, 2], -Rwc_ee[0, 2])
-            theta6 = atan2(-Rwc_ee[1, 1], Rwc_ee[1, 0])
+            theta4 = atan2(Rt[2, 2], -Rt[0, 2])
+            theta6 = atan2(-Rt[1, 1], Rt[1, 0])
         theta4, theta5, theta6 = float(theta4), float(theta5), float(theta6)
 
 
         ########################################################################
         # NOTE: This code section should work but does not produce valid answers
         # Reference: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.371.6578&rep=rep1&type=pdf
-        #
-        # if Rwc_ee[2, 0] != 1 or Rwc_ee[2, 0] != -1:
-        #     b1 = -asin(Rwc_ee[2, 0])
-        #     b2 = float(pi - b1)
-        #     a1 = atan2(Rwc_ee[2,1]/cos(b1), Rwc_ee[2, 2]/cos(b1))
-        #     a2 = atan2(Rwc_ee[2,1]/cos(b2), Rwc_ee[2, 2]/cos(b2))
-        #     g1 = atan2(Rwc_ee[1,0]/cos(b1), Rwc_ee[0, 0]/cos(b1))
-        #     g2 = atan2(Rwc_ee[1,0]/cos(b2), Rwc_ee[0, 0]/cos(b2))
+
+        if Rt[1, 2] != 1 or Rt[1, 2] != -1:
+            b1 = acos(Rt[1, 2])
+            b2 = float(pi-b1)
+            print('Beta: ',b1, b2, theta5)
+            a1 = atan2(-Rt[2,2]/cos(b1), Rt[0, 2]/cos(b1))
+            a2 = atan2(-Rt[2,2]/cos(b2), Rt[0, 2]/cos(b2))
+            print('alpha: ', float(a1), float(a2), theta4, atan2(-Rt[2, 2], Rt[0, 2]))
+            # g1 = atan2(Rwc_ee[1,0]/cos(b1), Rwc_ee[0, 0]/cos(b1))
+            # g2 = atan2(Rwc_ee[1,0]/cos(b2), Rwc_ee[0, 0]/cos(b2))
         # else:
         #     g1, g2 = 0, 0
         #     if Rwc_ee[2,0] == -1:

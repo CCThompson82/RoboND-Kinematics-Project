@@ -442,81 +442,67 @@ When simplified, the WC to EE rotation matrix can be represented as:
 $${}_{WC}^{EE}R_{sym} =
 \left[\begin{array}
 {rrr}
--sin(\theta_{4}) * sin(\theta_{6}) + cos(\theta_{4}) * cos(\theta_{5}) * cos(\theta_{6})& -sin(\theta_{4}) * cos(\theta_{6}) - sin(\theta_{6}) * cos(\theta_{4}) * cos(\theta_{5})& -sin(\theta_{5}) * cos(\theta_{4})] \\ sin(\theta_{5}) * cos(\theta_{6})& -sin(\theta_{5}) * sin(\theta_{6})& cos(\theta_{5}) \\ -sin(\theta_{4}) * cos(\theta_{5}) * cos(\theta_{6}) - sin(\theta_{6}) * cos(\theta_{4})& sin(\theta_{4}) * sin(\theta_{6}) * cos(\theta_{5}) - cos(\theta_{4}) * cos(\theta_{6})& sin(\theta_{4}) * sin(\theta_{5})
+-sin(\theta_{4}) \times sin(\theta_{6}) + cos(\theta_{4}) \times cos(\theta_{5}) \times cos(\theta_{6})& -sin(\theta_{4}) \times cos(\theta_{6}) - sin(\theta_{6}) \times cos(\theta_{4}) \times cos(\theta_{5})& -sin(\theta_{5}) \times cos(\theta_{4}) \\ sin(\theta_{5}) \times cos(\theta_{6})& -sin(\theta_{5}) \times sin(\theta_{6})& cos(\theta_{5}) \\ -sin(\theta_{4}) \times cos(\theta_{5}) \times cos(\theta_{6}) - sin(\theta_{6}) \times cos(\theta_{4})& sin(\theta_{4}) \times sin(\theta_{6}) \times cos(\theta_{5}) - cos(\theta_{4}) \times cos(\theta_{6})& sin(\theta_{4}) \times sin(\theta_{5})
 \end{array}\right]
-$$
+$$, and therefore:
+$$ {}_{WC}^{EE}R_{target} = \left[\begin{array}
+{rrr}
+-sin(\theta_{4}) \times sin(\theta_{6}) + cos(\theta_{4}) \times cos(\theta_{5}) \times cos(\theta_{6})& -sin(\theta_{4}) \times cos(\theta_{6}) - sin(\theta_{6}) \times cos(\theta_{4}) \times cos(\theta_{5})& -sin(\theta_{5}) \times cos(\theta_{4}) \\ sin(\theta_{5}) \times cos(\theta_{6})& -sin(\theta_{5}) \times sin(\theta_{6})& cos(\theta_{5}) \\ -sin(\theta_{4}) \times cos(\theta_{5}) \times cos(\theta_{6}) - sin(\theta_{6}) \times cos(\theta_{4})& sin(\theta_{4}) \times sin(\theta_{6}) \times cos(\theta_{5}) - cos(\theta_{4}) \times cos(\theta_{6})& sin(\theta_{4}) \times sin(\theta_{5})
+\end{array}\right]$$
+
 
 This symbolic matrix can be exploited in order to trigonometrically solve for
 each of the $\theta_{4}$, $\theta_{5}$, and $\theta_{6}$ angles.  
 
-##### Step 8 - Solve for $\theta_{4}$, $\theta_{5}$, and $\theta_{6}$
+##### Step 8 - Solve for $\theta_{5}$
+
+Looking at the ${}_{WC}^{EE}R_{sym}$ matrix, the easiest angle for which to
+solve appears to be  $\theta_{5}$, as  $$r_{23} = cos(\theta_{5})$$, and thus:
+$$\theta_{5} = acos(r_{23})$$, where $r_{23}$ is the value from the 2nd row and
+third column from  ${}_{WC}^{EE}R_{target}$.  Because $cos(\theta) =
+cos(-\theta)$,  then both  $$\theta_{5}^{1} = acos(r_{23})$$ and
+$$\theta_{5}^{2} = -acos(r_{23})$$ must  be considered valid solutions for
+$\theta_{5}$.
+
+While this is the simplest solution, care must be taken that if $r_{23} = \pm{}
+1$ , then $\theta_{5}$ can not be calculated by this method as the
+arccos($\pm$1) is undefined.      
+
+
+##### Step 9 - Solve for $\theta_{4}$
+
+At first glance, solving for  $\theta_{4}$ does not present an obvious exploitation
+within ${}_{WC}^{EE}R_{sym}$.  However, upon realization that:
+$$ tan(\theta) = \frac{sin(\theta)}{cos(\theta)}$$, thus:
+$$ \theta = atan2(sin(\theta), cos(\theta))$$
+, then a solution for $\theta_{4}$ can be derived as follows:
+$$ \frac{r_{33}}{-r_{13}} = \frac{sin(\theta_{4}) \times sin(\theta_{5})}{sin(\theta_{5}) \times -cos(\theta_{4})}$$
+$$ \frac{r_{33}}{r_{13}} = -1 \times \frac{sin(\theta_{4})}{cos(\theta_{4})}$$
+$$\frac{r_{33}}{r_{13}} = -1 \times tan(\theta_{4})$$,
+$$ tan(\theta_{4}) = \frac{-r_{33}}{r_{13}} = \frac{r_{33}}{-r_{13}}$$ thus:
+$$ \theta_{4}^{1} = atan2(-r_{33}, r_{13}) $$
+$$ \theta_{4}^{2} = atan2(r_{33}, -r_{13}) $$
 
 
 
 
 
-#### Solution of $\theta_{4}$, $\theta_{5}$, and $\theta_{6}$
-The strategy to solve for the angles of  $\theta_{4}$, $\theta_{5}$, and
-$\theta_{6}$ is as follows.  
-
-##### Generate a rotation matrix describing the transformation from link 0 to link 3
-The homogeneous transformation between the base link to link 3 is represented by:
-$${}_{0}^{3}T = {}_{0}^{1}T \times{}  {}_{1}^{2}T \times{} {}_{2}^{3}T$$
-
-
-Because the DH parameters regarding link length, offset, and twist angle are
-constant for the KUKA210, the only variables that remain undefined for this
-transformation matrix to describe any valid given robot state are $\theta_{1}$, $\theta_{2}$,
-and $\theta_{3}$.  The rotation matrix describing the orientation of joint 3,
-given the known angles can be defined by subsetting the homegenous transformation
-matrix as follows:
-
-$${}_{0}^{3}R = {}_{0}^{3}T[0:3, 0:3]$$
-
-Finally, $\theta_{1}$, $\theta_{2}$, and $\theta_{3}$ can be substituted for the
-symbolic variables within ${}_{0}^{3}R$ to generate a useful matrix composed of
-numeric floats.  
-
-$$
-\left[\begin{array}
-{rrr}
--sin(q4) * sin(q6) + cos(q4) * cos(q5) * cos(q6)& -sin(q4) * cos(q6) - sin(q6) * cos(q4) * cos(q5)& -sin(q5) * cos(q4)] \\ sin(q5) * cos(q6)& -sin(q5) * sin(q6)& cos(q5) \\ -sin(q4) * cos(q5) * cos(q6) - sin(q6) * cos(q4)& sin(q4) * sin(q6) * cos(q5) - cos(q4) * cos(q6)& sin(q4) * sin(q5)
-\end{array}\right]
-$$
-
-
-##### Describe the rotation of links 4 to the end-effector in the frame of the current links 0 to link 3
-The total homegenous transformation between the base-link to the end-effector
-is represented by:
-$${}_{0}^{EE}T = {}_{0}^{3}T \times{}  {}_{3}^{4}T \times{} {}_{4}^{5}T \times{} {}_{5}^{6}T \times{} {}_{6}^{EE}T $$
-
-Unevaluated, variables for all six joint angles are contained in the ${}_{0}^{EE}T$
-transformation matrix.  However,
-
-THE ROTATION MATRIX OF JOINT 3 to the EE
-$$
-\left[\begin{array}
-{rrr}
--sin(q4) * sin(q6) + cos(q4) * cos(q5) * cos(q6)& -sin(q4) * cos(q6) - sin(q6) * cos(q4) * cos(q5)& -sin(q5) * cos(q4)] \\ sin(q5) * cos(q6)& -sin(q5) * sin(q6)& cos(q5) \\ -sin(q4) * cos(q5) * cos(q6) - sin(q6) * cos(q4)& sin(q4) * sin(q6) * cos(q5) - cos(q4) * cos(q6)& sin(q4) * sin(q5)
-\end{array}\right]
-$$
 
 
 
-$atan2(sqrt((Rwc_ee[0, 2])^{2} + (Rwc_ee[2, 2])^{2}), Rwc_ee[1, 2])$
-$theta4 = atan2(-Rwc_ee[2, 2], Rwc_ee[0, 2])$
 
-Given the $\theta$ values for joints 1-3, the total homegenous
-transformation  matrix can be utilized to solve for the angles of joints 4-6
-that provide the  target wrist orientation using a series of arctangent
-evaluations.  The code for this calculation is found in  `Solver.solve_theta456`
-of the kinematics.py module.    
 
-The results of this full solution provide one valid joint state that yield the
-target pose.  Notably, more solutions to this problem exist.  The joint limits
-for the KUKA210 appear to reduce the number of solutions, however, due to the
-fact that Joint 2 cannot flip completely over to the reverse side of its 0
-radian orientation.   
+
+
+
+
+
+
+
+
+
+
+
 
 ## Project Implementation
 

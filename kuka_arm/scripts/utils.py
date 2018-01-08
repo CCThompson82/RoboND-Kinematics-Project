@@ -66,6 +66,30 @@ def rotate_z(sbl):
 
     return rot_Z
 
+def generate_sym_Rtarget(r, p, y):
+    """
+    Generates a symbolic rotation matrix that incorporates the roll, pitch,
+    yaw variables to describe the target EE orientation.
+
+    Args
+        r
+        p
+        y
+
+    Returns
+        symbolic matrix
+    """
+    rot_x = rotate_x(r)
+    rot_y = rotate_y(p)
+    rot_z = rotate_z(y)
+
+    rot_zyx = rot_z * rot_y * rot_x
+    r_correction = (rot_z * rot_y).subs({y:pi, p:-pi/2})
+
+    sym_R_target = rot_zyx * r_correction
+
+    return sym_R_target
+
 
 
 
