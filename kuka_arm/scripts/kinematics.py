@@ -39,10 +39,14 @@ class Solver(object):
 
         theta1 = self.solve_theta1()
         theta2, theta3 = self.solve_theta23()
-        theta4, theta5, theta6 = self.solve_theta456(
-            theta1=theta1, theta2=theta2, theta3=theta3)
-        entry1 = [theta1, theta2, theta3, theta4, theta5, theta6]
-        solution_set = [entry1]
+        wrist_solution_sets = self.solve_theta456(theta1=theta1, theta2=theta2, theta3=theta3)
+        entry1 = [theta1, theta2, theta3] + wrist_solution_sets[0]
+        entry2 = [theta1, theta2, theta3] + wrist_solution_sets[1]
+        entry3 = [theta1, theta2, theta3] + wrist_solution_sets[2]
+        print(entry1)
+        print(entry2)
+        print(entry3)
+        solution_set = [entry3]
 
         # TODO: calculate further solutions to the target IK problem and append to solution_set
 
@@ -94,13 +98,8 @@ class Solver(object):
 
         Rt = R0_WC.transpose() * self.Rtarget_0EE # NOTE: This is the evaluated matrix, (WC-->EE)Rtarget in the report.
 
-        # self.ROT_EE is the Rzyx rotmat, transformed to match the frame of the
-        # gripper as defined in the urdf file
-        # the transpose of the rotation from base to wrist is ??
-
-
-        # NOTE: Why does this logic work?  Reference the walkthrough demo and
-        # kind souls on the RoboND slack channel.
+        ########################################################################
+        # NOTE: demo plus slack channel
         theta5 = atan2(sqrt((Rt[0, 2])**2 + (Rt[2, 2])**2), Rt[1, 2]) #NOTE: watch out for +/- of root term
         if sin(theta5) < 0:
             theta4 = atan2(-Rt[2, 2], Rt[0, 2])
@@ -109,31 +108,58 @@ class Solver(object):
             theta4 = atan2(Rt[2, 2], -Rt[0, 2])
             theta6 = atan2(-Rt[1, 1], Rt[1, 0])
         theta4, theta5, theta6 = float(theta4), float(theta5), float(theta6)
-
+        ########################################################################
 
         ########################################################################
         # NOTE: This code section should work but does not produce valid answers
         # Reference: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.371.6578&rep=rep1&type=pdf
 
         if Rt[1, 2] != 1 or Rt[1, 2] != -1:
-            b1 = acos(Rt[1, 2])
-            b2 = float(pi-b1)
-            print('Beta: ',b1, b2, theta5)
-            a1 = atan2(-Rt[2,2]/cos(b1), Rt[0, 2]/cos(b1))
-            a2 = atan2(-Rt[2,2]/cos(b2), Rt[0, 2]/cos(b2))
-            print('alpha: ', float(a1), float(a2), theta4, atan2(-Rt[2, 2], Rt[0, 2]))
-            # g1 = atan2(Rwc_ee[1,0]/cos(b1), Rwc_ee[0, 0]/cos(b1))
-            # g2 = atan2(Rwc_ee[1,0]/cos(b2), Rwc_ee[0, 0]/cos(b2))
-        # else:
-        #     g1, g2 = 0, 0
-        #     if Rwc_ee[2,0] == -1:
-        #         b1, b2 = pi/2, pi/2
-        #         a1 = b1 + atan2(Rwc_ee[0,1], Rwc_ee[0,2])
-        #         a1 = a2
-        #     else:
-        #         b1, b2 = -pi/2, -pi/2
-        #         a1 = -b1 + atan2(-Rwc_ee[0,1], -Rwc_ee[0,2])
+            theta5_1 = acos(Rt[1, 2])
+            theta5_2 = -1 * theta5_1
+
+            theta4_1 = atan2(Rt[2,2]/cos(theta5_1), -Rt[0, 2]/cos(theta5_1))
+            theta4_2 = atan2(-Rt[2,2]/cos(theta5_2), Rt[0, 2]/cos(theta5_2))
+
+            theta6_1 = atan2(Rt[1, 1]/cos(theta5_1), -Rt[1, 0]/cos(theta5_1))
+            theta6_2 = atan2(-Rt[1, 1]/cos(theta5_2), Rt[1, 0]/cos(theta5_2))
+
+        else:
+            theta6_1, theta6_2 = 0, 0 # can be anything, but zero is convenient
+            if Rt[2,0] == -1:
+                theta5_1, theta5_2 = pi/2, pi/2
+                theta4_1 = theta5_1 + atan2(Rt[0,1], Rt[0,2])
+                theta4_2 = theta4_1
+            else:
+                theta5_1, theta5_2 = -pi/2, -pi/2
+                theta4_1 = -theta5_1 + atan2(-Rt[0,1], -Rt[0,2])
+                theta4_2 = theta4_1
         ########################################################################
 
 
-        return theta4, theta5, theta6
+        return [[theta4, theta5, theta6], [theta4_1, theta5_1, theta6_1], [theta4_2, theta5_2, theta6_2]]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    #
