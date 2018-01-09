@@ -354,7 +354,7 @@ $$ \theta_{3} = \frac{\pi}{2} - atan2(a_{3}, d_{4}) - acos(\frac{(A^{2} + C^{2} 
 
 The code for this calculation is found within `Solver.find_theta23` in kinematics.py, in lines 63-76.  
 
-##### Step 6 - Transform the ${}_{0}^{EE}R_{target}$ into the frame of the current WC
+#### Step 6 - Transform the ${}_{0}^{EE}R_{target}$ into the frame of the current WC
 
 To accomplish this, the following matrix multiplication is required: $$ {}_{WC}^{EE}R_{target} = {}_{0}^{WC}R^{-1}
 \times {}_{0}^{EE}R_{target}$$
@@ -365,7 +365,7 @@ the evaluated target EE rotation matrix. The result of this multiplication is a 
 symbolic) that represent the rotation from the zero angle wrist orientation to the target wrist orientation given the
 current orientation of joints 1, 2, and 3.  
 
-##### Step 7 - Generate the symbolic rotation matrix corresponding to ${}_{0}^{EE}R_{target}$
+#### Step 7 - Generate the symbolic rotation matrix corresponding to ${}_{0}^{EE}R_{target}$
 
 Finally, values must be found for $\theta_{4}$, $\theta_{5}$, and $\theta_{6}$ that satisfy the following evaluation:
 
@@ -394,7 +394,11 @@ $$ {}_{WC}^{EE}R_{target} = \left[\begin{array}
 This symbolic matrix can be exploited in order to trigonometrically solve for each of the $\theta_{4}$, $\theta_{5}$,
 and $\theta_{6}$ angles.  
 
-##### Step 8 - Solve for $\theta_{5}$
+#### Step 8 - Solve for $\theta_{5}$, $\theta_{4}$, and $\theta_{6}$
+
+##### Normal robot state (i.e. not in gimball lock)
+
+######  Solve for $\theta_{5}$
 
 Looking at the ${}_{WC}^{EE}R_{sym}$ matrix, the easiest angle for which to solve appears to be  $\theta_{5}$, as
 $$r_{23} = cos(\theta_{5})$$, and thus: $$\theta_{5} = acos(r_{23})$$, where $r_{23}$ is the value from the 2nd row and
@@ -402,10 +406,10 @@ third column from  ${}_{WC}^{EE}R_{target}$.  Because $cos(\theta) = cos(-\theta
 acos(r_{23})$$ and $$\theta_{5}^{2} = -acos(r_{23})$$ must  be considered valid solutions for $\theta_{5}$.
 
 While this is the simplest solution, care must be taken that if $r_{23} = \pm{} 1$ , then $\theta_{5}$ can not be
-calculated by this method as the arccos($\pm$1) is undefined.      
+calculated by this method as the arccos($\pm$1) is undefined. See the section on what if $\theta_{5} = 0$ below.     
 
 
-##### Step 9 - Solve for $\theta_{4}$
+######  Solve for $\theta_{4}$
 
 At first glance, solving for  $\theta_{4}$ does not present an obvious exploitation within ${}_{WC}^{EE}R_{sym}$.
 However, upon realization that:
@@ -420,7 +424,7 @@ $$ tan(\theta_{4}) = \frac{-r_{33}}{r_{13}} = \frac{r_{33}}{-r_{13}}$$ thus:
 $$ \theta_{4}^{1} = atan2(-r_{33}, r_{13}) $$, or:
 $$ \theta_{4}^{2} = atan2(r_{33}, -r_{13}) $$
 
-##### Step 10 - Solve for $\theta_{6}$
+###### Solve for $\theta_{6}$
 
 In similar fashion to $\theta_{4}$, $\theta_{6}$ can be solved by recognizing that:
 
@@ -433,6 +437,10 @@ $$ \theta_{6}^{1} =  atan2(-r_{22}, r_{21}) $$
 $$ \theta_{6}^{2} =  atan2(r_{22}, -r_{21}) $$
 
 
+
+##### Gimball Lock
+
+When cos()
 
 
 

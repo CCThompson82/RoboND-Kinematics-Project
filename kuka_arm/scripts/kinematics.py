@@ -46,7 +46,7 @@ class Solver(object):
         print(entry1)
         print(entry2)
         print(entry3)
-        solution_set = [entry3]
+        solution_set = [entry2]
 
         # TODO: calculate further solutions to the target IK problem and append to solution_set
 
@@ -102,8 +102,8 @@ class Solver(object):
         # NOTE: demo plus slack channel
         theta5 = atan2(sqrt((Rt[0, 2])**2 + (Rt[2, 2])**2), Rt[1, 2]) #NOTE: watch out for +/- of root term
         if sin(theta5) < 0:
-            theta4 = atan2(-Rt[2, 2], Rt[0, 2])
-            theta6 = atan2(Rt[1, 1], -Rt[1, 0])
+            theta4 = atan2(Rt[2, 2], -Rt[0, 2])
+            theta6 = atan2(-Rt[1, 1], Rt[1, 0])
         else:
             theta4 = atan2(Rt[2, 2], -Rt[0, 2])
             theta6 = atan2(-Rt[1, 1], Rt[1, 0])
@@ -116,15 +116,21 @@ class Solver(object):
 
         if Rt[1, 2] != 1 or Rt[1, 2] != -1:
             theta5_1 = acos(Rt[1, 2])
-            theta5_2 = -1 * theta5_1
+            theta5_2 = -1 * theta5_1 #NOTE: cos(theta) = cos(-theta)
 
-            theta4_1 = atan2(Rt[2,2]/cos(theta5_1), -Rt[0, 2]/cos(theta5_1))
-            theta4_2 = atan2(-Rt[2,2]/cos(theta5_2), Rt[0, 2]/cos(theta5_2))
-
-            theta6_1 = atan2(Rt[1, 1]/cos(theta5_1), -Rt[1, 0]/cos(theta5_1))
-            theta6_2 = atan2(-Rt[1, 1]/cos(theta5_2), Rt[1, 0]/cos(theta5_2))
+            if cos(theta5_1) > 0:
+                theta4_1 = atan2(Rt[2,2], -Rt[0, 2])
+                theta4_2 = atan2(-Rt[2,2], Rt[0, 2])
+                theta6_1 = atan2(Rt[1, 1], -Rt[1, 0])
+                theta6_2 = atan2(-Rt[1, 1], Rt[1, 0])
+            else:
+                theta4_2 = atan2(Rt[2,2], -Rt[0, 2])
+                theta4_1 = atan2(-Rt[2,2], Rt[0, 2])
+                theta6_2 = atan2(Rt[1, 1], -Rt[1, 0])
+                theta6_1 = atan2(-Rt[1, 1], Rt[1, 0])
 
         else:
+            #TODO!!!!!!!!!!!!!!!!!!!!!
             theta6_1, theta6_2 = 0, 0 # can be anything, but zero is convenient
             if Rt[2,0] == -1:
                 theta5_1, theta5_2 = pi/2, pi/2
@@ -134,6 +140,7 @@ class Solver(object):
                 theta5_1, theta5_2 = -pi/2, -pi/2
                 theta4_1 = -theta5_1 + atan2(-Rt[0,1], -Rt[0,2])
                 theta4_2 = theta4_1
+            #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         ########################################################################
 
 
