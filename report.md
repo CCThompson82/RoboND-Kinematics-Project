@@ -549,7 +549,7 @@ sets.
 service using solution set 1**
 
 ![alt_text][result2]
->**Figure 12- Results of running the pick and place task with the implemented IK
+>**Figure 13- Results of running the pick and place task with the implemented IK
 service using solution set 2**
 
 ## Discussion
