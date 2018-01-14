@@ -59,7 +59,6 @@ class ParamServer(object):
 
         self.T0_WC = (T01 * T12 * T23)
         self.T3_EE =  (T34 * T45 * T56 * T6EE) # NOTE: This is the matrix to examine for how to solve for theta 4,5,6
-
         self.T0_EE = (self.T0_WC * T34 * T45 * T56 * T6EE)
         self.R_EEtarget = self.T0_WC[:3, :3].transpose() * self.T0_EE[:3, :3] # NOTE: this is the target RM for which we need to solve
         return self.T0_WC, self.T0_EE

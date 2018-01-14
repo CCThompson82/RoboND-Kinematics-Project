@@ -43,10 +43,7 @@ class Solver(object):
         entry1 = [theta1, theta2, theta3] + wrist_solution_sets[0]
         entry2 = [theta1, theta2, theta3] + wrist_solution_sets[1]
         entry3 = [theta1, theta2, theta3] + wrist_solution_sets[2]
-        print(entry1)
-        print(entry2)
-        print(entry3)
-        solution_set = [entry2]
+        solution_set = [entry1, entry2, entry2]
 
         # TODO: calculate further solutions to the target IK problem and append to solution_set
 
@@ -99,7 +96,7 @@ class Solver(object):
         Rt = R0_WC.transpose() * self.Rtarget_0EE # NOTE: This is the evaluated matrix, (WC-->EE)Rtarget in the report.
 
         ########################################################################
-        # NOTE: demo plus slack channel
+        # NOTE: demo solution plus slack channel
         theta5 = atan2(sqrt((Rt[0, 2])**2 + (Rt[2, 2])**2), Rt[1, 2]) #NOTE: watch out for +/- of root term
         if sin(theta5) < 0:
             theta4 = atan2(Rt[2, 2], -Rt[0, 2])
@@ -111,38 +108,38 @@ class Solver(object):
         ########################################################################
 
         ########################################################################
-        # NOTE: This code section should work but does not produce valid answers
-        # Reference: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.371.6578&rep=rep1&type=pdf
+        # NOTE: Adapted from:
+        # http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.371.6578&rep=rep1&type=pdf
+        theta5_1 = acos(Rt[1, 2])
+        theta5_2 = -1 * theta5_1 #NOTE: cos(theta) = cos(-theta)
 
-        if Rt[1, 2] != 1 or Rt[1, 2] != -1:
-            theta5_1 = acos(Rt[1, 2])
-            theta5_2 = -1 * theta5_1 #NOTE: cos(theta) = cos(-theta)
+        if sin(theta5_1) != 0:
+            theta4_1 = atan2(Rt[2, 2]/sin(theta5_1), -Rt[0, 2]/sin(theta5_1))
+            theta4_2 = atan2(Rt[2, 2]/sin(theta5_2), -Rt[0, 2]/sin(theta5_2))
 
-            if cos(theta5_1) > 0:
-                theta4_1 = atan2(Rt[2,2], -Rt[0, 2])
-                theta4_2 = atan2(-Rt[2,2], Rt[0, 2])
-                theta6_1 = atan2(Rt[1, 1], -Rt[1, 0])
-                theta6_2 = atan2(-Rt[1, 1], Rt[1, 0])
-            else:
-                theta4_2 = atan2(Rt[2,2], -Rt[0, 2])
-                theta4_1 = atan2(-Rt[2,2], Rt[0, 2])
-                theta6_2 = atan2(Rt[1, 1], -Rt[1, 0])
-                theta6_1 = atan2(-Rt[1, 1], Rt[1, 0])
+            theta6_1 = atan2(-Rt[1, 1]/sin(theta5_1), Rt[1, 0]/sin(theta5_1))
+            theta6_2 = atan2(-Rt[1, 1]/sin(theta5_2), Rt[1, 0]/sin(theta5_2))
 
         else:
-            #TODO!!!!!!!!!!!!!!!!!!!!!
-            theta6_1, theta6_2 = 0, 0 # can be anything, but zero is convenient
-            if Rt[2,0] == -1:
-                theta5_1, theta5_2 = pi/2, pi/2
-                theta4_1 = theta5_1 + atan2(Rt[0,1], Rt[0,2])
-                theta4_2 = theta4_1
-            else:
-                theta5_1, theta5_2 = -pi/2, -pi/2
-                theta4_1 = -theta5_1 + atan2(-Rt[0,1], -Rt[0,2])
-                theta4_2 = theta4_1
-            #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        ########################################################################
+            # if sin(theta5) is 0, the sign corrections above will fail
+            # however! when theta5 is 0, then we know more about theta4 and theta6
 
+            # starting with:
+            # Rt[0, 0] = -s4*s5 + c4*c5*c6
+            # and realizing that given q5=0,  cos(0) = 1 or -1, such that:
+            # Rt[0, 0] = -s4*s5 + c4*c6 OR:
+            # Rt[0, 0] = -s4*s5 - c4*c6
+
+            # Using identity functions we can redefine these as:
+            # Rt[0, 0] = cos(theta4 + theta6) OR
+            # Rt[0, 0] = -sin(theta4 + theta6)
+
+            # Any pair of theta4 and theta6 that satisfy this solution are valid
+            theta6_1 = 0 # any number between -pi and pi will be valid 
+            theta4_1 = -theta6_1 + acos(Rt[0, 0])
+
+            theta6_2 = theta6_1
+            theta4_2 = theta4_1
 
         return [[theta4, theta5, theta6], [theta4_1, theta5_1, theta6_1], [theta4_2, theta5_2, theta6_2]]
 

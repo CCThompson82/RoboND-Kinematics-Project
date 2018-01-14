@@ -396,7 +396,7 @@ and $\theta_{6}$ angles.
 
 #### Step 8 - Solve for $\theta_{5}$, $\theta_{4}$, and $\theta_{6}$
 
-##### Normal robot state (i.e. not in gimball lock)
+##### Most robot states - all states where the robot is not in a 'gimbal lock'
 
 ######  Solve for $\theta_{5}$
 
@@ -438,9 +438,10 @@ $$ \theta_{6}^{2} =  atan2(r_{22}, -r_{21}) $$
 
 
 
-##### Gimball Lock
+##### Solving for wrist orientation under gimbal lock state
 
-When cos()
+When $\theta_{5}$ is equivalent to $\frac{\pi}{2}$ or $-\frac{\pi}{2}$, solution
+for
 
 
 
