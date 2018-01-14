@@ -53,7 +53,9 @@ def handle_calculate_IK(req):
 
             solution_set = solver.solve_IK(EExyz= [px, py, pz],
                                            EErpy=[roll, pitch, yaw])
-            (theta1, theta2, theta3, theta4, theta5, theta6) = solution_set[2]
+            (theta1, theta2, theta3, theta4, theta5, theta6) = solution_set[1]
+            #NOTE: index 0 is the demo solution, index 1 is personal first
+            # solution, index 2 is personal 2nd solution
 
             # Populate response for the IK request
             # In the next line replace theta1,theta2...,theta6 by your joint angle variables
