@@ -135,12 +135,25 @@ class Solver(object):
             # Rt[0, 0] = -sin(theta4 + theta6)
 
             # Any pair of theta4 and theta6 that satisfy this solution are valid
-            theta6_1 = 0 # any number between -pi and pi will be valid 
+            theta6_1 = 0 # any number between -pi and pi will be valid
             theta4_1 = -theta6_1 + acos(Rt[0, 0])
 
             theta6_2 = theta6_1
             theta4_2 = theta4_1
 
+            if cos(theta5_1) == 1: # theta is 0, +/-2pi
+                # Any pair of theta4 and theta6 that satisfy this solution are valid
+                theta6_1 = 0 # any number between -pi and pi will be valid
+                theta4_1 = -theta6_1 + acos(Rt[0, 0])
+            elif cos(theta5_1) == -1: # theta5 is +/- pi
+                theta6_1 = 0
+                theta4_1 = -theta6_1 - asin(Rt[0, 0])
+            else:
+                raise ValueError(
+                    'sin(theta5) = 0, but cos(theta5) != 1, -1.'
+                    '  Check logic for theta5 = {}!'.format(theta5_1))
+            theta6_2 = theta6_1
+            theta4_2 = theta4_1
         return [[theta4, theta5, theta6], [theta4_1, theta5_1, theta6_1], [theta4_2, theta5_2, theta6_2]]
 
 
