@@ -31,7 +31,8 @@ task.
 
 ## Abbrieviations
 IK - Inverse Kinematic(s)
-EEF - end-effector
+FK - Forward Kinematic(s)
+EE - end-effector
 WC - Wrist Center
 
 ## Kinematic Analysis
@@ -46,10 +47,10 @@ viewer).
 
 ![alt text][zero]
 
->Figure 1 - Illustration of the zero angle configuration for the KUKA210 robot. The robot is represented as a projection
-onto the global x, z plane,  with the positive y direction leaving the page toward the viewer (for clarity, the
-gripper orientation is not represented accurately in this schematic).  Joints are  shown in purple, and links between
-joints are shown in blue.  Each joint and link are numbered in accordance with DH parameter guidelines.
+>**Figure 1 - Illustration of the zero angle configuration for the KUKA210 robot.** The robot is represented as a
+projection onto the global x, z plane,  with the positive y direction leaving the page toward the viewer (for clarity,
+the gripper orientation is not represented accurately in this schematic).  Joints are  shown in purple, and links
+between joints are shown in blue.  Each joint and link are numbered in accordance with DH parameter guidelines.
 
 
 Origins for each joint, with their respective positive $\hat{Z}$ and $\hat{X}$ axes must then be defined.  Choice of
@@ -229,10 +230,8 @@ open-form (gradient or random sampling), or close-form methods.
 In mathematical terms, the IK problem asks what set of variable parameters (i.e. $\theta_{0:6}$) satisfy:
 $${}_{0}^{EE}T_{symbolic} = {}_{0}^{EE}T_{target}$$
 , where:
-* ${}_{0}^{EE}T_{symbolic}$ represents the unevalulated homogenous transformation
-from base link to EE maintaining symbolic representation of $\theta_{0:6}$, and
-* ${}_{0}^{EE}T_{target}$ represents the evaluated homegenous transformation
-matrix taking into account the desired EE positions and gripper orientation.  
+* ${}_{0}^{EE}T_{symbolic}$ represents the unevalulated homogenous transformation from base link to EE maintaining symbolic representation of $\theta_{0:6}$, and
+* ${}_{0}^{EE}T_{target}$ represents the evaluated homegenous transformation matrix taking into account the desired EE positions and gripper orientation.  
 
 For this project, a closed-form solution was attempted.   In order to generate a closed form IK solver, it is
 advantageous to decouple the position from the WC-to-EE orientation.  In other words, we stipulate that joints 1, 2 and
@@ -243,23 +242,22 @@ close-formed solution  acheivable using basic trigonometric analysis.
 #### Step 1 - Define the target Transformation matrix
 
 The first step towards IK solution is to define ${}_{0}^{EE}T_{target}$ for the
-target pose.   $$ {}_{0}^{EE}T_{target} = \left[\begin{array} {rrrr} r_{11} &
-r_{12} & r_{13} & EE_{x} \\ r_{21} & r_{22} & r_{23} & EE_{y} \\ r_{31} & r_{32} &
-r_{33} & EE_{z} \\ 0 & 0 & 0 & 1 \end{array}\right] $$ , where:
-$$\left[\begin{array} {rrr} r_{11} & r_{12} & r_{13}  \\ r_{21} & r_{22} &
-r_{23}  \\ r_{31} & r_{32} & r_{33}   \end{array}\right] =
-{}_{0}^{EE}R_{target}$$ - i.e. the rotation matrix representing the target EE
-orientation in the base link (in this case, also the world) frame, generated
-using the roll, pitch, and yaw rotations given as the desired EE pose.
-$EE_{xyz}$ represent the positions of the EE in the frame of the base link (in
-this case, also the world frame)
+target pose.   
 
-This symbolic transformation matrix only needs to be generated once, and is done
-so during the initiation  of the `ParamServer` object from parameters.py
-(initiation occurs on line 33 in IK_server.py).  This generation incorporates
-the given roll, pitch, and yaw angles into a $R_{zyx}$ matrix that has been
-corrected to place the urdf frame definition into the frame of the base link (
-also the world frame).  
+$$ {}_{0}^{EE}T_{target} = \left[\begin{array} {rrrr} r_{11} &
+r_{12} & r_{13} & EE_{x} \\ r_{21} & r_{22} & r_{23} & EE_{y} \\ r_{31} & r_{32} &
+r_{33} & EE_{z} \\ 0 & 0 & 0 & 1 \end{array}\right] $$
+
+$$
+{}_{0}^{EE}R_{target} = \left[\begin{array} {rrr} r_{11} & r_{12} & r_{13}  \\ r_{21} & r_{22} &
+r_{23}  \\ r_{31} & r_{32} & r_{33}   \end{array}\right]$$
+
+- i.e. the rotation matrix representing the target EE orientation in the base link (in this case, also the world) frame, generated using the roll, pitch, and yaw rotations given as the desired EE pose. $EE_{xyz}$ represent the positions of the EE in the frame of the base link (in this case, also the world frame)
+
+This symbolic transformation matrix only needs to be generated once, and is done so during the initiation  of the
+`ParamServer` object from parameters.py (initiation occurs on line 33 in IK_server.py).  This generation incorporates
+the given roll, pitch, and yaw angles into a $R_{zyx}$ matrix that has been corrected to place the urdf frame definition
+into the frame of the base link ( also the world frame).  
 
 #### Step 2 - Evaluate the coordinates of the Wrist Center (WC)
 
@@ -301,7 +299,9 @@ into its X and Y components, ignoring the Z-projection. An illustration of $\the
 the spherical wrist are illustrated from left to right.  The angle between $\hat{X}_{0}$ and $\hat{X}_{1}$ is the
 arctangent of the $WC_{y}$ and $WC_{x}$ components.
 
-From this depiction it is clear that: $$ tan(\theta_{1}) = \frac{WC_{y}}{WC_{x}} $$ , thus:
+From this depiction it is clear that:
+
+$$ tan(\theta_{1}) = \frac{WC_{y}}{WC_{x}} $$
 
 $$ \theta_{1} = atan2(WC_{y}, WC_{x}) $$
 
@@ -353,18 +353,21 @@ configuration.  A non-zero joint 3 angle is depicted in **Figure 11**.  From thi
 $\theta_{3}$ angle is equal to the difference between $\frac{\pi}{2}$ and the sum of angles $b$ and $m$.  
 
 ![alt_text][theta3]
->**Figure 11 - Demonstration of a non-zero $\theta_{3}$ angle.**  
+>**Figure 11 - Demonstration of a non-zero $\theta_{3}$ angle.**  An attempt to demonstrate the joint angle of  $\theta_{3}$ is shown geometrically.   
 
 From this analysis it is clear that:
-$$ \frac{\pi}{2} = \theta_{3} + m + b$$, thus:
+
+$$ \frac{\pi}{2} = \theta_{3} + m + b$$
+
 $$ \theta_{3} = \frac{\pi}{2} - atan2(a_{3}, d_{4}) - acos(\frac{(A^{2} + C^{2} - B^{2}}{(2\times A\times C)})  $$
 
 The code for this calculation is found within `Solver.find_theta23` in kinematics.py, in lines 63-76.  
 
 #### Step 6 - Transform the ${}_{0}^{EE}R_{target}$ into the frame of the current WC
 
-To accomplish this, the following matrix multiplication is required: $$ {}_{WC}^{EE}R_{target} = {}_{0}^{WC}R^{-1}
-\times {}_{0}^{EE}R_{target}$$
+To accomplish this, the following matrix multiplication is required:
+
+$$ {}_{WC}^{EE}R_{target} = {}_{0}^{WC}R^{-1} \times {}_{0}^{EE}R_{target}$$
 
 To obtain ${}_{0}^{WC}R^{-1}$, the homegenous transform from base link to link 3 is evaluated using the  $\theta_{1}$,
 $\theta_{2}$, and $\theta_{3}$ angles already calculated.  This evaluated matrix is transposed and the multiplied into
@@ -404,11 +407,9 @@ Any set of $\theta_{4}$, $\theta_{5}$, and $\theta_{6}$ that statisfies
 
 $${}_{WC}^{EE}R_{sym} = {}_{WC}^{EE}R_{target}$$
 
-, where $ {}_{WC}^{EE}R_{target}$ represents the matrix of floats generated from
-step 6, will produce a valid orientation in the pick and place task.  To
-accomplish this, the symbolic matrix can be exploited in order to
-trigonometrically solve for each of the $\theta_{4}$, $\theta_{5}$, and
-$\theta_{6}$ angles.
+, where $ {}_{WC}^{EE}R_{target}$ represents the matrix of floats generated from step 6, will produce a valid
+orientation in the pick and place task.  To accomplish this, the symbolic matrix can be exploited in order to
+trigonometrically solve for each of the $\theta_{4}$, $\theta_{5}$, and $\theta_{6}$ angles.
 
 
 #### Step 8 - Solve for wrist joint angles
@@ -420,10 +421,11 @@ $$r_{23} = cos(\theta_{5})$$, and thus
 
 $$\theta_{5} = acos(r_{23})$$
 
-, where $r_{23}$ is the value from the 2nd row and
-third column from  ${}_{WC}^{EE}R_{target}$.  Because $cos(\theta) = cos(-\theta)$,  then both  
+, where $r_{23}$ is the value from the 2nd row and third column from  ${}_{WC}^{EE}R_{target}$.  Because $cos(\theta) =
+cos(-\theta)$,  then both  
 
 $$\theta_{5}^{1} = acos(r_{23})$$
+
 $$\theta_{5}^{2} = -acos(r_{23})$$
 
 must  be considered valid solutions for $\theta_{5}$.
@@ -435,12 +437,10 @@ However, considering the identify function
 
 $$ tan(\theta) = \frac{sin(\theta)}{cos(\theta)}$$
 
-with theta solved via
-
 $$ \theta = atan2(sin(\theta), cos(\theta))$$
 
-In this manner, $\theta_{4}$ can be found by generating this expression with
-the quotient of $r_{33}$ and $r_{13}$ as follows:
+In this manner, $\theta_{4}$ can be found by generating this expression with the quotient of $r_{33}$ and $r_{13}$ as
+follows:
 
 $$ \frac{r_{33}}{r_{13}} = \frac{sin(\theta_{4}) \times sin(\theta_{5})}{sin(\theta_{5}) \times -cos(\theta_{4})}$$
 
@@ -456,9 +456,8 @@ $$ \theta_{4}^{?} = atan2(r_{33}, -r_{13}) $$
 
 $$ \theta_{4}^{?} = atan2(-r_{33}, r_{13}) $$
 
-But which of these solutions corresponds to the appropriate of the two $\theta_5$
-angles?  One can utilize the sign of $sin(\theta_5)$ to define the quadrant
-described by the terms received by the atan2 function.  For instance, when the
+But which of these solutions corresponds to the appropriate of the two $\theta_5$ angles?  One can utilize the sign of
+$sin(\theta_5)$ to define the quadrant described by the terms received by the atan2 function.  For instance, when the
 $sin(\theta_{5}) > 0$, then
 
 $$ atan2(r_{33}, -r_{13}) =  atan2(\frac{r_{33}}{sin(\theta_{5})}, \frac{-r_{13}}{sin(\theta_{5})}) $$
@@ -467,16 +466,15 @@ and when $sin(\theta_{5}) < 0 $, then
 
 $$ atan2(-r_{33}, r_{13}) =  atan2(\frac{r_{33}}{sin(\theta_{5})}, \frac{-r_{13}}{sin(\theta_{5})}) $$
 
-Because the two solutions for $\theta_{5}$ opposite magnitudes, then we can
-always define the solutions for $\theta_{4}$ as
+Because the two solutions for $\theta_{5}$ opposite magnitudes, then we can always define the solutions for $\theta_{4}$
+as
 
 $$ \theta_{4}^{1} =  atan2(\frac{r_{33}}{sin(\theta_{5}^{1})}, \frac{-r_{13}}{sin(\theta_{5}^{1})})$$
 
 $$ \theta_{4}^{2} =  atan2(\frac{r_{33}}{sin(\theta_{5}^{2})}, \frac{-r_{13}}{sin(\theta_{5}^{2})})$$
 
-This process will automatically assign the correct quadrant for the $\theta_{4}$
-for all cases of $\theta_{5}$, except where $sin(\theta_{5}) = 0$.  In this  
-special case, a different approach must be made, which is described in the
+This process will automatically assign the correct quadrant for the $\theta_{4}$ for all cases of $\theta_{5}$, except
+where $sin(\theta_{5}) = 0$.  In this   special case, a different approach must be made, which is described in the
 'Solving for $\theta_{4}$ and $\theta_{6}$ when $sin(\theta_{5}) = 0$' section.
 
 ##### Solve for $\theta_{6}$
@@ -489,8 +487,7 @@ $$ \frac{r_{22}}{r_{21}} = -1 \times \frac{sin(\theta_{6})}{cos(\theta_{6})}$$
 
 $$ tan(\theta_{6}) =  \frac{-r_{22}}{r_{21}} =  \frac{r_{22}}{-r_{21}} $$
 
-With the similar trick described in solving for $\theta_{4}$, solutions for $\theta_{6}$,
-can be defined as
+With the similar trick described in solving for $\theta_{4}$, solutions for $\theta_{6}$, can be defined as
 
 $$ \theta_{6}^{1} =  atan2(\frac{-r_{22}}{sin(\theta_{5}^{1})}, \frac{r_{21}}{sin(\theta_{5}^{1})}) $$
 
@@ -499,12 +496,10 @@ $$ \theta_{6}^{2} = atan2(\frac{-r_{22}}{sin(\theta_{5}^{2})}, \frac{r_{21}}{sin
 
 ##### Solving for $\theta_{4}$ and $\theta_{6}$ when $sin(\theta_{5}) = 0$
 
-When $\theta_{5}$ is equivalent to $\pm{\pi}$ or $0$, then the $sin(\theta_{5}) = 0$,
-which makes the trick for combining the corresponding joint
-angles together return as undefined (divide by zero).  In these cases
-a different approach must be taken.  This approach begins by recognizing that
-when $sin(\theta) = 0$, then the $cos(\theta) = \pm{1}$.  Therefore, $r_{11}$
-can be simplified as follows
+When $\theta_{5}$ is equivalent to $\pm{\pi}$ or $0$, then the $sin(\theta_{5}) = 0$, which makes the trick for
+combining the corresponding joint angles together return as undefined (divide by zero).  In these cases a different
+approach must be taken.  This approach begins by recognizing that when $sin(\theta) = 0$, then the $cos(\theta) =
+\pm{1}$.  Therefore, $r_{11}$ can be simplified as follows
 
 $$ r_{11} =  -sin(\theta_{4}) \times sin(\theta_{5}) +
 cos(\theta_{4}) \times cos(\theta_{5}) \times cos(\theta_{6})$$
@@ -518,42 +513,44 @@ $$ r_{11} =  cos(\theta_{4} + \theta_{6})$$
 
 $$ r_{11} =  -sin(\theta_{4} + \theta_{6})$$
 
-Any set of $\theta_{4}$ and $\theta_{6}$ that satisify these equations will be
-valid with the given $\theta_{5}$ value.  
+Any set of $\theta_{4}$ and $\theta_{6}$ that satisify these equations will be valid with the given $\theta_{5}$ value.  
 
 ## Code implementation of solving for an IK solution  
 
-The code for these step is located within kinematics.py.  This module contains
-an object which is initiated with an instance of ParamServer, containing the
-requisite transformation matrices and DH-parameters.  The Solver object contains
-a method `Solver.solve_IK` that receives the target postion and orientation for
-the EE, and returns a list of solution sets including the solution
-provided by the Udacity demo (not discussed), and the two solution sets
-described by the steps above.
+The code for these step is located within kinematics.py.  This module contains an object which is initiated with an
+instance of ParamServer, containing the requisite transformation matrices and DH-parameters.  The Solver object contains
+a method `Solver.solve_IK` that receives the target postion and orientation for the EE, and returns a list of solution
+sets including the solution provided by the Udacity demo (not discussed), and the two solution sets described by the
+steps above.
 
-## Pick and Place Implementation
+## Results
 
-The logic described above is deployed in IK_server.py within the
-`handle_calculate_IK` function.  This function receives a list of poses for a
-trajectory plan, and returns a list of joint angle states that will yield the
-trajectory of poses.  As noted above, 3 solution sets are returned from the
-`Solver.solve_IK` method.  Currently, the default solution
-set corresponds to $(\theta_{1}, \theta_{2}, \theta_{3}, \theta_{4}^{1}, \theta_{5}^{1}, \theta_{6}^{1})$.  
+The logic described above is deployed in IK_server.py within the `handle_calculate_IK` function.  This function receives
+a list of poses for a trajectory plan, and returns a list of joint angle states that will yield the trajectory of poses.
+As noted above, 3 solution sets are returned from the `Solver.solve_IK` method.  Currently, the default solution set
+corresponds to $(\theta_{1}, \theta_{2}, \theta_{3}, \theta_{4}^{1}, \theta_{5}^{1}, \theta_{6}^{1})$.  
 
-The objective of this project was ultimately to allow a pick and place task to
-complete without error.  This objective was accomplished for three solution
-sets.  
+The objective of this project was ultimately to allow a pick and place task to complete without error.  This objective
+was accomplished for three solution sets.  
 
 ![alt_text][result1]
->**Figure 12- Results of running the pick and place task with the implemented IK
-service using solution set 1**
+>**Figure 12- Results of running the pick and place task with the implemented IK service using solution set 1.**  Notice that all 10 of the blue pick objects have been successfully placed in the  container.  
 
 ![alt_text][result2]
->**Figure 13- Results of running the pick and place task with the implemented IK
-service using solution set 2**
+>**Figure 13- Results of running the pick and place task with the implemented IK service using solution set 2.**  Notice that all of the 10 blue pick objects have been successfully placed in the container.  
 
-## Discussion
+## Summary Conclusion
 
-This project implements a single solution to the Inverse Kinematics problem, in
-which a target pose (EE-position and orientation) is converted into a valid set
-of joint angle states.  
+This project implements a single solution to the Inverse Kinematics problem, in which a target pose (EE-position and
+orientation) is converted into a sets of valid joint angle states.  This logic was placed inside of an IK service call
+by which a path of EE positions and orientations could be converted into valid robot states for each way point of the
+desired robot path.  Two solution sets were generated using closed-form IK solutions for the KUKA210 robot, using a
+reference DH-parameter table.  The solution sets were valid in all cases tested, as the robot pick and place task ran
+without error in 20 straight pick attempts, using both the solution 1 and solution 2 sets discussed in this report.  
+The default solution set is currently set to Set 1, and leaving the default provides excellent results in this task.  
+However, it is possible that the execution time could be decreased by a clever way to choose between solution 1 or 2
+at each waypoint.  Moreover, it is possible that more complex environments with more collision objects to avoid may
+require both solutions (or more) to successfully complete each pick and place.  
+
+In conclusion a closed-form IK solution service was successfully implemented for a KUKA210 pick and place task and this
+report outlines the theoretical steps taken to accomplish this with reference to the associated code in this repository.
