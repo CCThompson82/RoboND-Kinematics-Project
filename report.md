@@ -276,26 +276,9 @@ $${}_{6}^{EE}T =
 $$ {}_{0}^{EE}T = {}_{0}^{1}T \times {}_{1}^{2}T \times {}_{2}^{3}T \times {}_{3}^{4}T \times {}_{4}^{5}T \times {}_{5}^{6}T \times {}_{6}^{EE}T $$
 
 
-$$ {}_{0}^{EE}T =
-\left[\begin{array}
-{rrrr}
-sin( \theta_{1}) \times sin( \theta_{4}) + sin( \theta_{2} +  \theta_{3}) \times cos( \theta_{1}) \times cos( \theta_{4})) \times cos( \theta_{5}) + sin( \theta_{5}) \times cos( \theta_{1}) \times cos( \theta_{2} +  \theta_{3})) \times cos( \theta_{6}) + (sin( \theta_{1}) \times cos( \theta_{4}) - sin( \theta_{4}) \times sin( \theta_{2} +  \theta_{3}) \times cos( \theta_{1})) \times sin( \theta_{6}) &   
--((sin( \theta_{1}) \times sin( \theta_{4}) + sin( \theta_{2} +  \theta_{3}) \times cos( \theta_{1}) \times cos( \theta_{4})) \times cos( \theta_{5}) + sin( \theta_{5}) \times cos( \theta_{1}) \times cos( \theta_{2} +  \theta_{3})) \times sin( \theta_{6}) + (sin( \theta_{1}) \times cos( \theta_{4}) - sin( \theta_{4}) \times sin( \theta_{2} +  \theta_{3}) \times cos( \theta_{1})) \times cos( \theta_{6}) &   
--(sin( \theta_{1}) \times sin( \theta_{4}) + sin( \theta_{2} +  \theta_{3}) \times cos( \theta_{1}) \times cos( \theta_{4})) \times sin( \theta_{5}) + cos( \theta_{1}) \times cos( \theta_{5}) \times cos( \theta_{2} +  \theta_{3}) &   
--0.303 \times (sin( \theta_{1}) \times sin( \theta_{4}) + sin( \theta_{2} +  \theta_{3}) \times cos( \theta_{1}) \times cos( \theta_{4})) \times sin( \theta_{5}) + (1.25 \times sin( \theta_{2}) - 0.054 \times sin( \theta_{2} +  \theta_{3}) + 1.5 \times cos( \theta_{2} +  \theta_{3}) + 0.35) \times cos( \theta_{1}) + 0.303 \times cos( \theta_{1}) \times cos( \theta_{5}) \times cos( \theta_{2} +  \theta_{3}) \\
-sin( \theta_{1}) \times  sin( \theta_{2} +  \theta_{3}) \times  cos( \theta_{4}) - sin( \theta_{4}) \times  cos( \theta_{1})) \times  cos( \theta_{5}) + sin( \theta_{1}) \times  sin( \theta_{5}) \times  cos( \theta_{2} +  \theta_{3})) \times  cos( \theta_{6}) - (sin( \theta_{1}) \times  sin( \theta_{4}) \times  sin( \theta_{2} +  \theta_{3}) + cos( \theta_{1}) \times  cos( \theta_{4})) \times  sin( \theta_{6}) &   
--((sin( \theta_{1}) \times  sin( \theta_{2} +  \theta_{3}) \times  cos( \theta_{4}) - sin( \theta_{4}) \times  cos( \theta_{1})) \times  cos( \theta_{5}) + sin( \theta_{1}) \times  sin( \theta_{5}) \times  cos( \theta_{2} +  \theta_{3})) \times  sin( \theta_{6}) - (sin( \theta_{1}) \times  sin( \theta_{4}) \times  sin( \theta_{2} +  \theta_{3}) + cos( \theta_{1}) \times  cos( \theta_{4})) \times  cos( \theta_{6}) &   
--(sin( \theta_{1}) \times  sin( \theta_{2} +  \theta_{3}) \times  cos( \theta_{4}) - sin( \theta_{4}) \times  cos( \theta_{1})) \times  sin( \theta_{5}) + sin( \theta_{1}) \times  cos( \theta_{5}) \times  cos( \theta_{2} +  \theta_{3}) &   
--0.303 \times  (sin( \theta_{1}) \times  sin( \theta_{2} +  \theta_{3}) \times  cos( \theta_{4}) - sin( \theta_{4}) \times  cos( \theta_{1})) \times  sin( \theta_{5}) + (1.25 \times  sin( \theta_{2}) - 0.054 \times  sin( \theta_{2} +  \theta_{3}) + 1.5 \times  cos( \theta_{2} +  \theta_{3}) + 0.35) \times  sin( \theta_{1}) + 0.303 \times  sin( \theta_{1}) \times  cos( \theta_{5}) \times  cos( \theta_{2} +  \theta_{3}) \\
--(sin( \theta_{5}) \times  sin( \theta_{2} +  \theta_{3}) - cos( \theta_{4}) \times  cos( \theta_{5}) \times  cos( \theta_{2} +  \theta_{3})) \times  cos( \theta_{6}) - sin( \theta_{4}) \times  sin( \theta_{6}) \times  cos( \theta_{2} +  \theta_{3}) &   
-(sin( \theta_{5}) \times  sin( \theta_{2} +  \theta_{3}) - cos( \theta_{4}) \times  cos( \theta_{5}) \times  cos( \theta_{2} +  \theta_{3})) \times  sin( \theta_{6}) - sin( \theta_{4}) \times  cos( \theta_{6}) \times  cos( \theta_{2} +  \theta_{3}) &   -sin( \theta_{5}) \times  cos( \theta_{4}) \times  cos( \theta_{2} +  \theta_{3}) - sin( \theta_{2} +  \theta_{3}) \times  cos( \theta_{5}) &   
--0.303 \times  sin( \theta_{5}) \times  cos( \theta_{4}) \times  cos( \theta_{2} +  \theta_{3}) - 0.303 \times  sin( \theta_{2} +  \theta_{3}) \times  cos( \theta_{5}) - 1.5 \times  sin( \theta_{2} +  \theta_{3}) + 1.25 \times  cos( \theta_{2}) - 0.054 \times  cos( \theta_{2} +  \theta_{3}) + 0.75 \\
-0 & 0 & 0 & 1
-\end{array}\right]$$
-
-
 Evaluation of $ {}_{0}^{EE}T $ by substituting the symbolic $\theta$ variables will provide a matrix that explicitly
-describes the end effector position and implicity describes the end-effector orientation (see Inverse Kinematic Solution section for more on calculation of euler angle orientation from a rotation matrix).
+describes the end effector position and implicity describes the end-effector orientation (see Inverse Kinematic
+Solution section for more on calculation of euler angle orientation from a rotation matrix).
 
 $$ {}_{0}^{EE}T = \left[\begin{array} {rrrr} r_{11} & r_{12} & r_{13} & EE_{x} \\ r_{21} & r_{22} & r_{23} & EE_{y} \\
 r_{31} & r_{32} & r_{33} & EE_{z} \\ 0 & 0 & 0 & 1 \end{array}\right] $$, where the $EE_{xyz}$ represent the coordinates of the end-effector in the frame of  the base link.  
@@ -334,13 +317,19 @@ r_{23}  \\ r_{31} & r_{32} & r_{33}   \end{array}\right]$$
 
 - i.e. the rotation matrix representing the target EE orientation in the base link (in this case, also the world) frame, generated using the roll, pitch, and yaw rotations given as the desired EE pose. $EE_{xyz}$ represent the positions of the EE in the frame of the base link (in this case, also the world frame)
 
-This symbolic transformation matrix only needs to be generated once, and is done so during the initiation  of the
-`ParamServer` object from parameters.py (initiation occurs on line 33 in IK_server.py).  This generation incorporates
-the given roll, pitch, and yaw angles into a $R_{zyx}$ matrix that has been corrected to place the urdf frame definition
-into the frame of the base link ( also the world frame).  
+The target transformation matrix is generated for each IK server call and incorporates the desired roll, pitch, and yaw
+angles into a $R_{zyx}$ matrix that has been corrected to place the urdf frame definition into the frame of the base
+link (which is also the world frame).  The resultant rotation matrix is evaluated from
+
+$$ {}_{0}^{EE}T_{target} =
+\left[\begin{array} {rrrr}
+sin(pitch) \times cos(roll) \times cos(yaw) + sin(roll) \times sin(yaw) & -sin(pitch) \times sin(roll) \times cos(yaw) + sin(yaw) \times cos(roll) &  cos(pitch) \times cos(yaw) & EE_{x} \\
+sin(pitch) \times sin(yaw) \times cos(roll) - sin(roll) \times cos(yaw) &  -sin(pitch) \times sin(roll) \times sin(yaw) - cos(roll) \times cos(yaw) & sin(yaw) \times cos(pitch) & EE_{y} \\
+cos(pitch) \times cos(roll) & -sin(roll) \times cos(pitch) & -sin(pitch) & EE_{z} \\
+0 & 0 & 0 & 1
+\end{array}\right] $$
 
 #### Step 2 - Evaluate the coordinates of the Wrist Center (WC)
-
 
 The next step to the IK solution is to work backwards from the ${}_{0}^{EE}T_{target}$ to obtain the positions of the WC
 in the world frame.  This is accomplished by taking the z-frame of the ${}_{0}^{EE}R_{target}$, which represents the
