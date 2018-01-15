@@ -210,15 +210,95 @@ transform between the base_link and the end effector, in which only the $\theta_
 The composition of these link transforms is completed by the `ParamServer.generate_homegenous_transforms` method in
 parameters.py as follows:
 
+$${}_{0}^{1}T =
+\left[\begin{array}
+{rrrr}
+cos(\theta_{1}) & -sin(\theta_{1}) & 0 & 0 \\
+sin(\theta_{1}) & cos(\theta_{1}) & 0 & 0 \\
+0 & 0 & 1 & 0.75 \\
+0 & 0 & 0 & 1
+\end{array}\right] $$
+
+$${}_{1}^{2}T =
+\left[\begin{array}
+{rrrr}
+sin(\theta_{2}) & cos(\theta_{2}) & 0 & 0.35 \\
+0 & 0 & 1 & 0  \\
+cos(\theta_{2}) & -sin(\theta_{2}) & 0 & 0 \\
+0 & 0 & 0 & 1
+\end{array}\right] $$
+
+$${}_{2}^{3}T =
+\left[\begin{array}
+{rrrr}
+cos(\theta_{3}) & -sin(\theta_{3}) & 0 & 1.25 \\
+sin(\theta_{3}) & cos(\theta_{3}) & 0 & 0 \\
+0 & 0 & 1 & 0 \\
+0 & 0 & 0 & 1
+\end{array}\right] $$
+
+$${}_{3}^{4}T =
+\left[\begin{array}
+{rrrr}
+cos(\theta_{4}) & -sin(\theta_{4}) & 0 & -0.054 \\
+0 & 0 & 1 & 1.50 \\
+-sin(\theta_{4}) & -cos(\theta_{4}) & 0 & 0 \\
+0 & 0 & 0 & 1
+\end{array}\right] $$
+
+$${}_{4}^{5}T =
+\left[\begin{array}
+{rrrr}
+cos(\theta_{5}) & -sin(\theta_{5}) & 0 & 0 \\
+0 & 0 & -1 & 0 \\
+sin(\theta_{5}) & cos(\theta_{5}) & 0 & 0 \\
+0 & 0 & 0 & 1
+\end{array}\right] $$
+
+$${}_{5}^{6}T =
+\left[\begin{array}
+{rrrr}
+cos(\theta_{6}) & -sin(\theta_{6}) & 0 & 0 \\
+0 & 0 & 1 & 0 \\
+-sin(\theta_{6}) & -cos(\theta_{6}) & 0 & 0 \\
+0 & 0 & 0 & 1
+\end{array}\right] $$
+
+$${}_{6}^{EE}T =
+\left[\begin{array}
+{rrrr}
+1 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 \\
+0 & 0 & 1 & 0.303 \\
+0 & 0 & 0 & 1
+\end{array}\right] $$
+
 $$ {}_{0}^{EE}T = {}_{0}^{1}T \times {}_{1}^{2}T \times {}_{2}^{3}T \times {}_{3}^{4}T \times {}_{4}^{5}T \times {}_{5}^{6}T \times {}_{6}^{EE}T $$
 
+
+$$ {}_{0}^{EE}T =
+\left[\begin{array}
+{rrrr}
+sin( \theta_{1}) \times sin( \theta_{4}) + sin( \theta_{2} +  \theta_{3}) \times cos( \theta_{1}) \times cos( \theta_{4})) \times cos( \theta_{5}) + sin( \theta_{5}) \times cos( \theta_{1}) \times cos( \theta_{2} +  \theta_{3})) \times cos( \theta_{6}) + (sin( \theta_{1}) \times cos( \theta_{4}) - sin( \theta_{4}) \times sin( \theta_{2} +  \theta_{3}) \times cos( \theta_{1})) \times sin( \theta_{6}) &   
+-((sin( \theta_{1}) \times sin( \theta_{4}) + sin( \theta_{2} +  \theta_{3}) \times cos( \theta_{1}) \times cos( \theta_{4})) \times cos( \theta_{5}) + sin( \theta_{5}) \times cos( \theta_{1}) \times cos( \theta_{2} +  \theta_{3})) \times sin( \theta_{6}) + (sin( \theta_{1}) \times cos( \theta_{4}) - sin( \theta_{4}) \times sin( \theta_{2} +  \theta_{3}) \times cos( \theta_{1})) \times cos( \theta_{6}) &   
+-(sin( \theta_{1}) \times sin( \theta_{4}) + sin( \theta_{2} +  \theta_{3}) \times cos( \theta_{1}) \times cos( \theta_{4})) \times sin( \theta_{5}) + cos( \theta_{1}) \times cos( \theta_{5}) \times cos( \theta_{2} +  \theta_{3}) &   
+-0.303 \times (sin( \theta_{1}) \times sin( \theta_{4}) + sin( \theta_{2} +  \theta_{3}) \times cos( \theta_{1}) \times cos( \theta_{4})) \times sin( \theta_{5}) + (1.25 \times sin( \theta_{2}) - 0.054 \times sin( \theta_{2} +  \theta_{3}) + 1.5 \times cos( \theta_{2} +  \theta_{3}) + 0.35) \times cos( \theta_{1}) + 0.303 \times cos( \theta_{1}) \times cos( \theta_{5}) \times cos( \theta_{2} +  \theta_{3}) \\
+sin( \theta_{1}) \times  sin( \theta_{2} +  \theta_{3}) \times  cos( \theta_{4}) - sin( \theta_{4}) \times  cos( \theta_{1})) \times  cos( \theta_{5}) + sin( \theta_{1}) \times  sin( \theta_{5}) \times  cos( \theta_{2} +  \theta_{3})) \times  cos( \theta_{6}) - (sin( \theta_{1}) \times  sin( \theta_{4}) \times  sin( \theta_{2} +  \theta_{3}) + cos( \theta_{1}) \times  cos( \theta_{4})) \times  sin( \theta_{6}) &   
+-((sin( \theta_{1}) \times  sin( \theta_{2} +  \theta_{3}) \times  cos( \theta_{4}) - sin( \theta_{4}) \times  cos( \theta_{1})) \times  cos( \theta_{5}) + sin( \theta_{1}) \times  sin( \theta_{5}) \times  cos( \theta_{2} +  \theta_{3})) \times  sin( \theta_{6}) - (sin( \theta_{1}) \times  sin( \theta_{4}) \times  sin( \theta_{2} +  \theta_{3}) + cos( \theta_{1}) \times  cos( \theta_{4})) \times  cos( \theta_{6}) &   
+-(sin( \theta_{1}) \times  sin( \theta_{2} +  \theta_{3}) \times  cos( \theta_{4}) - sin( \theta_{4}) \times  cos( \theta_{1})) \times  sin( \theta_{5}) + sin( \theta_{1}) \times  cos( \theta_{5}) \times  cos( \theta_{2} +  \theta_{3}) &   
+-0.303 \times  (sin( \theta_{1}) \times  sin( \theta_{2} +  \theta_{3}) \times  cos( \theta_{4}) - sin( \theta_{4}) \times  cos( \theta_{1})) \times  sin( \theta_{5}) + (1.25 \times  sin( \theta_{2}) - 0.054 \times  sin( \theta_{2} +  \theta_{3}) + 1.5 \times  cos( \theta_{2} +  \theta_{3}) + 0.35) \times  sin( \theta_{1}) + 0.303 \times  sin( \theta_{1}) \times  cos( \theta_{5}) \times  cos( \theta_{2} +  \theta_{3}) \\
+-(sin( \theta_{5}) \times  sin( \theta_{2} +  \theta_{3}) - cos( \theta_{4}) \times  cos( \theta_{5}) \times  cos( \theta_{2} +  \theta_{3})) \times  cos( \theta_{6}) - sin( \theta_{4}) \times  sin( \theta_{6}) \times  cos( \theta_{2} +  \theta_{3}) &   
+(sin( \theta_{5}) \times  sin( \theta_{2} +  \theta_{3}) - cos( \theta_{4}) \times  cos( \theta_{5}) \times  cos( \theta_{2} +  \theta_{3})) \times  sin( \theta_{6}) - sin( \theta_{4}) \times  cos( \theta_{6}) \times  cos( \theta_{2} +  \theta_{3}) &   -sin( \theta_{5}) \times  cos( \theta_{4}) \times  cos( \theta_{2} +  \theta_{3}) - sin( \theta_{2} +  \theta_{3}) \times  cos( \theta_{5}) &   
+-0.303 \times  sin( \theta_{5}) \times  cos( \theta_{4}) \times  cos( \theta_{2} +  \theta_{3}) - 0.303 \times  sin( \theta_{2} +  \theta_{3}) \times  cos( \theta_{5}) - 1.5 \times  sin( \theta_{2} +  \theta_{3}) + 1.25 \times  cos( \theta_{2}) - 0.054 \times  cos( \theta_{2} +  \theta_{3}) + 0.75 \\
+0 & 0 & 0 & 1
+\end{array}\right]$$
+
+
 Evaluation of $ {}_{0}^{EE}T $ by substituting the symbolic $\theta$ variables will provide a matrix that explicitly
-describes the end effector position and implicity describes the end-effector orientation (see Inverse Kinematic Solution
-section for more on calculation of euler angle orientation from a rotation matrix).
+describes the end effector position and implicity describes the end-effector orientation (see Inverse Kinematic Solution section for more on calculation of euler angle orientation from a rotation matrix).
 
 $$ {}_{0}^{EE}T = \left[\begin{array} {rrrr} r_{11} & r_{12} & r_{13} & EE_{x} \\ r_{21} & r_{22} & r_{23} & EE_{y} \\
-r_{31} & r_{32} & r_{33} & EE_{z} \\ 0 & 0 & 0 & 1 \end{array}\right] $$, where the $EE_{xyz}$ represent the coordinates
-of the end-effector in the frame of  the base link.  
+r_{31} & r_{32} & r_{33} & EE_{z} \\ 0 & 0 & 0 & 1 \end{array}\right] $$, where the $EE_{xyz}$ represent the coordinates of the end-effector in the frame of  the base link.  
 
 ### Inverse Kinematic Solution
 
